@@ -1,0 +1,5 @@
+[client]
+database = mapshare
+user = mapshare
+password = Whatsthis1!
+default-character-set = utf8
