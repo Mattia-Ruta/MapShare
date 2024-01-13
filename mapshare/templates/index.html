@@ -2,11 +2,12 @@
 {% load static %}
 {% block title %}Mapshare{% endblock %}
 {% block content%}
+<p>{% if msg %}{{ msg }}{% endif %}</p>
 <div id="map"><a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:999;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a></div>
 <script type="text/javascript">
     const key = 'mnDqESAstYMabvU6wITv';
     const tileLayer = "https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg";
-    const map = L.map('map').setView([51.508151, -0.110089], 40); //starting position
+    const map = L.map('map').setView([{{urlLat}}, {{urlLng}}], {{initialZoom}}); //starting position
     L.tileLayer(`${tileLayer}?key=${key}`,{
       tileSize: 512,
       zoomOffset: -1,
@@ -24,6 +25,39 @@
         //    .setContent("Marker")
         //    .openOn(map);
         // TODO: Add logic to remove marker on other click
+        fetch("getMapcodeAJAX", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                lat: lat,
+                lng: lng
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const success = data.success == "true";
+            const url = window.location.origin;
+            let content = "Mapcode for this location not available";
+            delete data.success
+            if (success) {
+                content = "";
+                Object.keys(data).forEach(context => {
+                    content += `[${context}] ${data[context]}<br>`;
+                    console.log(context);
+                    console.log(data[context]);
+                })
+            }
+            let popup = L.popup()
+            .setLatLng([lat, lng])
+            .setContent(content)
+            .openOn(map);
+        });
     });
+
+    
 </script>
 {% endblock %}
