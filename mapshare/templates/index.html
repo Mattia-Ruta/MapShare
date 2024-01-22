@@ -3,11 +3,22 @@
 {% block title %}Mapshare{% endblock %}
 {% block content%}
 <p>{% if msg %}{{ msg }}{% endif %}</p>
-<div id="map"><a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:999;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a></div>
+<div id="map"><a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:998;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a></div>
+
+<div class="leaflet-bottom leaflet-left info legend leaflet-control" style="box-sizing: border-box; position: fixed; z-index: 999; display: flex; justify-content: space-between;">
+    <h2 id="mapcode-text">Context: {{ context }} <i class="fa-solid fa-circle-question"></i><br>Mapcode: {{ mapcode }} <i class="fa-solid fa-share-nodes"></i></h2>
+</div>
+
 <script type="text/javascript">
-    const key = 'mnDqESAstYMabvU6wITv';
+    const key = "{{ maptilerAPIKey }}";
+    const urlLat = {{ urlLat }};
+    const urlLng = {{ urlLng }};
     const tileLayer = "https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg";
-    const map = L.map('map').setView([{{urlLat}}, {{urlLng}}], {{initialZoom}}); //starting position
+    const map = L.map('map')
+        .setView([urlLat, urlLng], {{initialZoom}}); //starting position
+    const isValidMapcode = "{{ isValidMapcode }}" == "True";
+    var marker;
+
     L.tileLayer(`${tileLayer}?key=${key}`,{
       tileSize: 512,
       zoomOffset: -1,
@@ -15,17 +26,21 @@
       attribution: "\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e",
       crossOrigin: true
     }).addTo(map);
+
+    if (isValidMapcode) {
+        marker = L.marker([urlLat, urlLng]).addTo(map);
+    }
+
     map.on("click", function(e) {
         // Add marker to map on click
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
-        let marker = L.marker([lat, lng]).addTo(map);
-        //let popup = L.popup()
-        //    .setLatLng([lat, lng])
-        //    .setContent("Marker")
-        //    .openOn(map);
-        // TODO: Add logic to remove marker on other click
-        fetch("getMapcodeAJAX", {
+        const contextText = document.getElementById("context-text");
+        const mapcodeText = document.getElementById("mapcode-text");
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+        fetch("/getMapcodeAJAX", {
             method: "POST",
             credentials: "same-origin",
             headers: {
@@ -46,15 +61,12 @@
             if (success) {
                 content = "";
                 Object.keys(data).forEach(context => {
-                    content += `[${context}] ${data[context]}<br>`;
-                    console.log(context);
-                    console.log(data[context]);
+                    if (context == "AAA") return;
+                    content += `[${context}] ${data[context]} <br>`;
+                    mapcodeText.innerHTML = `Context: ${context} <i class="fa-solid fa-circle-question"></i><br>Mapcode: ${data[context]}<i class="fa-solid fa-share-nodes"></i>`;
+                    window.history.pushState({}, "", `/${context}/${data[context]}`);
                 })
             }
-            let popup = L.popup()
-            .setLatLng([lat, lng])
-            .setContent(content)
-            .openOn(map);
         });
     });
 

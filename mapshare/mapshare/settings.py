@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'fontawesomefree',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +59,10 @@ TEMPLATES = [
         },
     },
 ]
+
+# Variables
+IPDATA_API_KEY = os.getenv("IPDATA_API_KEY")
+MAPTILER_API_KEY = os.getenv("MAPTILER_API_KEY")
 
 WSGI_APPLICATION = 'mapshare.wsgi.application'
 
