@@ -3,10 +3,30 @@
 {% block title %}Mapshare{% endblock %}
 {% block content%}
 <p>{% if msg %}{{ msg }}{% endif %}</p>
-<div id="map"><a href="https://www.maptiler.com" style="position:absolute;left:10px;bottom:10px;z-index:998;"><img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo"></a></div>
 
-<div class="leaflet-bottom leaflet-left info legend leaflet-control" style="box-sizing: border-box; position: fixed; z-index: 999; display: flex; justify-content: space-between;">
-    <h2 id="mapcode-text">Context: {{ context }} <i class="fa-solid fa-circle-question"></i><br>Mapcode: {{ mapcode }} <i class="fa-solid fa-share-nodes"></i></h2>
+<div style="position: relative;">
+    <div id="map" style="height: 100%; width: 100%; position: fixed; z-index: -1;">
+        <a href="https://www.maptiler.com">
+            <img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo">
+        </a>
+    </div>
+    <div class=""
+        id="legend-cnt"
+        style="box-sizing: border-box; position: fixed; z-index: 999; justify-content: space-between; color: white; background-color: #3c3c3c; padding: 10px; bottom: 0; left: 0;"
+    >
+        <h2 id="mapcode-text" style=" font-size: 2.5rem;"><small>{{ context }}</small> {{ mapcode }}</h2> <p id="territory">Territory: {{ territory }}</p>
+    </div>
+</div>
+
+
+<div class="fixed-action-btn">
+    <a class="btn-floating btn-large blue" title="click to copy share link">
+        <i class="large material-icons">menu</i>
+    </a>
+    <ul>
+        <li><a class="btn-floating blue btn modal-trigger tooltipped" id="info-link" data-position="left" data-tooltip="More info on Mapcodes"><i class="material-icons">info</i></a></li>
+        <li><a class="btn-floating blue btn modal-trigger tooltipped" id="share-link" data-position="left" data-tooltip="Click to copy share link"><i class="material-icons">link</i></a></li>
+    </ul>
 </div>
 
 <script type="text/javascript">
@@ -37,6 +57,8 @@
         const lng = e.latlng.lng;
         const contextText = document.getElementById("context-text");
         const mapcodeText = document.getElementById("mapcode-text");
+        const territoryText = document.getElementById("territory");
+
         if (marker) map.removeLayer(marker);
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
 
@@ -57,19 +79,42 @@
             const success = data.success == "true";
             const url = window.location.origin;
             let content = "Mapcode for this location not available";
+            let territory = "Territory: International";
             delete data.success
             if (success) {
+                console.log(data);
                 content = "";
-                Object.keys(data).forEach(context => {
-                    if (context == "AAA") return;
-                    content += `[${context}] ${data[context]} <br>`;
-                    mapcodeText.innerHTML = `Context: ${context} <i class="fa-solid fa-circle-question"></i><br>Mapcode: ${data[context]}<i class="fa-solid fa-share-nodes"></i>`;
-                    window.history.pushState({}, "", `/${context}/${data[context]}`);
-                })
+                data.mapcodes.forEach(result => {
+                    content += `<small>${result.context}</small> ${result.mapcode}<br>`;
+                    window.history.pushState({}, "", `/${result.context}/${result.mapcode}`);
+                    // TODO: At the moment it's only using the last one (AAA) update this to use the first one
+                    territory = `Territory: ${result.territory}`;
+                });
+                mapcodeText.innerHTML = content;
+                territoryText.innerHTML = territory;
+            } else {
+                M.toast({html: "No valid mapcode found"});
             }
         });
     });
 
+    document.addEventListener("DOMContentLoaded", function() {
+        const actionButtons = document.querySelectorAll(".fixed-action-btn");
+        const actionButtonInstances = M.FloatingActionButton.init(actionButtons, {});
+        const tooltips = document.querySelectorAll(".tooltipped");
+        const tooltipInstances = M.Tooltip.init(tooltips, {});
+        const sharelinkElem = document.getElementById("share-link");
+        let sharelink = "/{{ context }}/{{ mapcode }}";
+
+        sharelinkElem.addEventListener("click", function() {
+            // Copies link to clipboard
+            navigator.clipboard.writeText(window.location.href);
+            M.toast({html: "Share link copied to clipboard!", classes: "rounded"});
+        });
+    });
+
+    // TODO: Implement Geoapify for autosuggest
     
 </script>
+
 {% endblock %}

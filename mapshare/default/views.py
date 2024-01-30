@@ -6,12 +6,14 @@ from ipware import get_client_ip
 import mapcode as mc
 import json
 import ipdata
+import pycountry
 
 
-def index(request, context="", mapcode=""):
+def index(request, context = "GBR", mapcode = "JJ.55"):
     msg = None
     initialZoom = 10
     isValidMapcode = False
+    territory = ""
     
     client_ip, is_routable = get_client_ip(request)
     ipdata.api_key = settings.IPDATA_API_KEY
@@ -29,12 +31,13 @@ def index(request, context="", mapcode=""):
         coords = mc.decode(f"{context} {mapcode}")
         initialZoom = 40
         isValidMapcode = True
-    elif len(mapcode) == 0 and len(context) == 0:
+        territory = pycountry.countries.get(alpha_3=context).name or "Unknown"
+    elif not mapcode and not context:
         pass
     else:
         msg = f"'{context} {mapcode}' is an invalid mapcode"
 
-    context = {
+    vars = {
         "msg": msg,
         "urlLat": coords[0],
         "urlLng": coords[1],
@@ -42,9 +45,10 @@ def index(request, context="", mapcode=""):
         "mapcode": mapcode,
         "initialZoom": initialZoom,
         "isValidMapcode": isValidMapcode,
-        "maptilerAPIKey": settings.MAPTILER_API_KEY
+        "maptilerAPIKey": settings.MAPTILER_API_KEY,
+        "territory": territory
     }
-    return render(request, "index.html", context)
+    return render(request, "index.html", vars)
 
 
 def getMapcodeAJAX(request):
@@ -53,10 +57,15 @@ def getMapcodeAJAX(request):
         body = json.loads(request.body)
         response = mc.encode(body["lat"], body["lng"])
         if len(response) > 0:
-            payload = [("success", "true")]
+            payload = {"success": "true", "mapcodes": []}
             for mapcode in response:
-                payload.append((mapcode[1], mapcode[0]))
-            payload = dict(payload)
+                if mapcode[1] == "AAA":
+                    territory = "International"
+                else:
+                    country = pycountry.countries.get(alpha_3=mapcode[1])
+                    if country:
+                        territory = country.name
+                payload["mapcodes"].append({"context": mapcode[1], "mapcode": mapcode[0], "territory": territory or mapcode[1]})
             return HttpResponse(json.dumps(payload), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"success": False}), content_type="application/json")
