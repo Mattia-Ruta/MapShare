@@ -6,3 +6,4 @@ mysqlclient==2.2.0
 mapcode==2.5.5.0
 pycountry==23.12.11
 python-dotenv==1.0.0
+reverse_geocoder==1.5.1

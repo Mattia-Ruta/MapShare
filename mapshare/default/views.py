@@ -4,43 +4,63 @@ from django.conf import settings
 from mapshare.functions import getCountryCode3
 from ipware import get_client_ip
 import mapcode as mc
+import reverse_geocoder as rg
 import json
 import ipdata
+import math
 import pycountry
 
 
-def index(request, context = "GBR", mapcode = "JJ.55"):
+def index(request, mapcode, context = False):
     msg = None
     initialZoom = 10
     isValidMapcode = False
-    territory = ""
+    territory = context
+    coords = (51.500675, -0.124578)
     
     client_ip, is_routable = get_client_ip(request)
     ipdata.api_key = settings.IPDATA_API_KEY
 
-    # Get starting area and context
-    if client_ip is None or client_ip == "127.0.0.1":
-        context = "GBR"
-        coords = (51.500675,-0.124578)
+    if not context:
+        # Check if international mapcode
+        if mc.isvalid(mapcode, 0):
+            response = mc.decode(mapcode)
+            if math.isnan(response[0]) or math.isnan(response[1]):
+                # Not a valid mapcode, might need context
+                if (client_ip == "127.0.0.1"):
+                    context = "GBR"
+                else:
+                    response = ipdata.lookup(client_ip)
+                    context = getCountryCode3(response.get("country_code", "GB"))
+            else:
+                # International mapcode
+                context = "AAA"
+                coords = mc.decode(mapcode)
+                territory = "International (No context needed)"
+        else:
+            msg = f"'{mapcode}' is an invalid mapcode"
+            context = ""
+            mapcode = ""
     else:
-        response = ipdata.lookup(client_ip)
-        context = getCountryCode3(response.get("country_code", "GB"))
-        coords = (response.get("latitude", 51.500675),response.get("longitude", -0.124578))
+        # Context given, get coords
+        if mc.isvalid(f"{context} {mapcode}"):
+            coords = mc.decode(f"{context} {mapcode}")
+            initialZoom = 35
+            isValidMapcode = True
+        else:
+            msg = f"'{context} {mapcode}' is an invalid mapcode"
 
-    if mc.isvalid(f"{context} {mapcode}"):
-        coords = mc.decode(f"{context} {mapcode}")
-        initialZoom = 40
-        isValidMapcode = True
-        territory = pycountry.countries.get(alpha_3=context).name or "Unknown"
-    elif not mapcode and not context:
-        pass
-    else:
-        msg = f"'{context} {mapcode}' is an invalid mapcode"
+    if not context == "AAA":
+        response = rg.get((coords[0], coords[1]))
+        if response["admin1"]:
+            countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
+            territory = f"{response['admin1']}, {countryInfo.name}"
 
+    # TODO: Add function to get territory from coordinates and add to AJAX view
     vars = {
         "msg": msg,
-        "urlLat": coords[0],
-        "urlLng": coords[1],
+        "urlLat": coords[0] or 51.500675,
+        "urlLng": coords[1] or -0.124578,
         "context": context,
         "mapcode": mapcode,
         "initialZoom": initialZoom,
@@ -53,12 +73,15 @@ def index(request, context = "GBR", mapcode = "JJ.55"):
 
 def getMapcodeAJAX(request):
     if request.method == "POST":
-        success = False
         body = json.loads(request.body)
         response = mc.encode(body["lat"], body["lng"])
         if len(response) > 0:
             payload = {"success": "true", "mapcodes": []}
             for mapcode in response:
+                territory = mapcode[1]
+                locationInfo = rg.get((body["lat"], body["lng"]))
+                if locationInfo["cc"] == "US":
+                    territory = f"{locationInfo['admin1']}, United States"
                 if mapcode[1] == "AAA":
                     territory = "International"
                 else:

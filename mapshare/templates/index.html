@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Mapshare{% endblock %}
 {% block content%}
-<p>{% if msg %}{{ msg }}{% endif %}</p>
+<p>{% if msg %}<script text="text/javascript">alert("{{ msg }}");window.history.pushState({}, "", `/`);</script>{% endif %}</p>
 
 <div style="position: relative;">
     <div id="map" style="height: 100%; width: 100%; position: fixed; z-index: -1;">
@@ -10,11 +10,18 @@
             <img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo">
         </a>
     </div>
-    <div class=""
-        id="legend-cnt"
-        style="box-sizing: border-box; position: fixed; z-index: 999; justify-content: space-between; color: white; background-color: #3c3c3c; padding: 10px; bottom: 0; left: 0;"
-    >
-        <h2 id="mapcode-text" style=" font-size: 2.5rem;"><small>{{ context }}</small> {{ mapcode }}</h2> <p id="territory">Territory: {{ territory }}</p>
+
+    <div id="legend-cnt">
+
+        <h2 id="mapcode-text" style=" font-size: 2.5rem;"><small>{{ context }}</small> {{ mapcode }} <a class="copy-link" href="javascript:;" title="Click to copy share link" data-context="{{ context }}" data-mapcode="{{ mapcode }}"><i class="material-icons">insert_link</i></a></h2> <p id="territory">Territory: {{ territory }}</p>
+        <div>
+            <ul id="collapsible-container" class="collapsible">
+                <li id="expand-box-list">
+                    <div id="expand-box" class="collapsible-header grey darken-1 white-text">Expand for more mapcodes <i id="expand-arrow" class="material-icons">arrow_drop_down</i></div>
+                    <div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -25,7 +32,7 @@
     </a>
     <ul>
         <li><a class="btn-floating blue btn modal-trigger tooltipped" id="info-link" data-position="left" data-tooltip="More info on Mapcodes"><i class="material-icons">info</i></a></li>
-        <li><a class="btn-floating blue btn modal-trigger tooltipped" id="share-link" data-position="left" data-tooltip="Click to copy share link"><i class="material-icons">link</i></a></li>
+        <li><a class="btn-floating blue btn modal-trigger tooltipped share-link" id="share-link" data-position="left" data-tooltip="Click to copy share link" data-context="{{ context }}" data-mapcode="{{ mapcode }}"><i class="material-icons">link</i></a></li>
     </ul>
 </div>
 
@@ -51,6 +58,72 @@
         marker = L.marker([urlLat, urlLng]).addTo(map);
     }
 
+    function openExpandBox() {
+        const collapsibleContainer = document.getElementById("collapsible-container");
+        const instance = M.Collapsible.getInstance(collapsibleContainer);
+        instance.open();
+    }
+
+    function closeExpandBox() {
+        const collapsibleContainer = document.getElementById("collapsible-container");
+        const instance = M.Collapsible.getInstance(collapsibleContainer);
+        instance.close();
+    }
+
+    function setExpandBoxContent(content = "") {
+        closeExpandBox();
+        const expandBox = document.getElementById("expand-box-list");
+
+        // Clear box
+        const expandBoxBodies = document.querySelectorAll(".collapsible-body");
+        expandBoxBodies.forEach(elem => elem.remove());
+
+        if (content.length = 0) {
+            expandBox.innerHTML += `<div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>`;
+        } else {
+            expandBox.innerHTML += content;
+        }
+    }
+
+    function refreshLinks() {
+        const shareLinkElems = document.querySelectorAll(".share-link");
+        const copyLinkElems = document.querySelectorAll(".copy-link");
+
+        shareLinkElems.forEach((elem) => {
+            elem.addEventListener("click", () => {
+                const url = window.location.origin + `/${elem.dataset.context}/${elem.dataset.mapcode}`;
+                navigator.clipboard.writeText(url);
+                M.toast({html: "Share link copied to clipboard!", classes: "rounded"});
+            });
+        });
+
+        copyLinkElems.forEach((elem) => {
+            elem.addEventListener("click", () => {
+                navigator.clipboard.writeText(`${elem.dataset.context} ${elem.dataset.mapcode}`);
+                M.toast({html: "Mapcode copied to clipboard!", classes: "rounded"});
+            })
+        })
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const actionButtons = document.querySelectorAll(".fixed-action-btn");
+        const actionButtonInstances = M.FloatingActionButton.init(actionButtons, {});
+        const tooltips = document.querySelectorAll(".tooltipped");
+        const tooltipInstances = M.Tooltip.init(tooltips, {});
+
+        const collapsibles = document.querySelectorAll(".collapsible");
+        const expandBox = document.getElementById("expand-box");
+        const collapsibleOptions = {
+            onOpenStart: function() {document.getElementById("expand-arrow").innerHTML = "arrow_drop_up"},
+            onCloseStart: function() {document.getElementById("expand-arrow").innerHTML = "arrow_drop_down"}
+        };
+        const collapsibleInstances = M.Collapsible.init(collapsibles, collapsibleOptions);
+
+        refreshLinks();
+        // TODO: Add refresh for extra mapcodes for first load
+
+    });
+
     map.on("click", function(e) {
         // Add marker to map on click
         const lat = e.latlng.lat;
@@ -58,9 +131,11 @@
         const contextText = document.getElementById("context-text");
         const mapcodeText = document.getElementById("mapcode-text");
         const territoryText = document.getElementById("territory");
+        const noMapcodesDiv = `<div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>`;
 
         if (marker) map.removeLayer(marker);
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+        console.log([lat,lng]);
 
         fetch("/getMapcodeAJAX", {
             method: "POST",
@@ -78,38 +153,33 @@
         .then(data => {
             const success = data.success == "true";
             const url = window.location.origin;
+            const expandBox = document.getElementById("expand-box");
             let content = "Mapcode for this location not available";
             let territory = "Territory: International";
             delete data.success
             if (success) {
                 console.log(data);
                 content = "";
-                data.mapcodes.forEach(result => {
-                    content += `<small>${result.context}</small> ${result.mapcode}<br>`;
-                    window.history.pushState({}, "", `/${result.context}/${result.mapcode}`);
-                    // TODO: At the moment it's only using the last one (AAA) update this to use the first one
-                    territory = `Territory: ${result.territory}`;
+
+                data.mapcodes.forEach((result, i) => {
+                    if (i == 0) {
+                        // Main mapcode
+                        mapcodeText.innerHTML = `<small>${result.context}</small> ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a><br>`;
+                        territoryText.innerHTML = `Territory: ${result.territory}`;
+                        window.history.pushState({}, "", `/${result.context}/${result.mapcode}`);
+                    } else if (result.context == "AAA"){
+                        // International mapcode
+                        content += `<div class="collapsible-body lime lighten-4 black-text">(International) ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a></div>`;
+                    } else {
+                        // Append extra mapcodes to expanding box
+                        content += `<div class="collapsible-body"><small>${result.context}</small> ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a></div>`;
+                    }
+                    setExpandBoxContent(content);
                 });
-                mapcodeText.innerHTML = content;
-                territoryText.innerHTML = territory;
+                refreshLinks();
             } else {
                 M.toast({html: "No valid mapcode found"});
             }
-        });
-    });
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const actionButtons = document.querySelectorAll(".fixed-action-btn");
-        const actionButtonInstances = M.FloatingActionButton.init(actionButtons, {});
-        const tooltips = document.querySelectorAll(".tooltipped");
-        const tooltipInstances = M.Tooltip.init(tooltips, {});
-        const sharelinkElem = document.getElementById("share-link");
-        let sharelink = "/{{ context }}/{{ mapcode }}";
-
-        sharelinkElem.addEventListener("click", function() {
-            // Copies link to clipboard
-            navigator.clipboard.writeText(window.location.href);
-            M.toast({html: "Share link copied to clipboard!", classes: "rounded"});
         });
     });
 
