@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.conf import settings
-from mapshare.functions import getCountryCode3
+from mapshare.functions import getCountryCode3, isAValidMapcode
 from ipware import get_client_ip
 import mapcode as mc
 import reverse_geocoder as rg
@@ -11,56 +11,57 @@ import math
 import pycountry
 
 
-def index(request, mapcode, context = False):
+def index(request, mapcode = False, context = False):
     msg = None
     initialZoom = 10
-    isValidMapcode = False
+    isValidMapcode = isAValidMapcode(context, mapcode)
     territory = context
-    coords = (51.500675, -0.124578)
+    coords = False
     
     client_ip, is_routable = get_client_ip(request)
+    if client_ip == "127.0.0.1": client_ip = "31.94.18.51"
     ipdata.api_key = settings.IPDATA_API_KEY
+    lookupData = ipdata.lookup(client_ip)
 
-    if not context:
-        # Check if international mapcode
-        if mc.isvalid(mapcode, 0):
-            response = mc.decode(mapcode)
-            if math.isnan(response[0]) or math.isnan(response[1]):
-                # Not a valid mapcode, might need context
-                if (client_ip == "127.0.0.1"):
-                    context = "GBR"
-                else:
-                    response = ipdata.lookup(client_ip)
-                    context = getCountryCode3(response.get("country_code", "GB"))
-            else:
-                # International mapcode
-                context = "AAA"
-                coords = mc.decode(mapcode)
-                territory = "International (No context needed)"
-        else:
-            msg = f"'{mapcode}' is an invalid mapcode"
-            context = ""
-            mapcode = ""
+    # TODO: Maybe implement in future
+    # if not context:
+    #     # Try to pull context from request
+    #     context = getCountryCode3(lookupData.get("country_code", "GB"))
+
+    if mapcode and context and isValidMapcode:
+        coords = mc.decode(mapcode, context)
+    elif mapcode and context and not isValidMapcode:
+        msg = f"{context} {mapcode} is an invalid mapcode."
+        coords = False
+        context = ""
+        mapcode = ""
+    elif mapcode and not context:
+        msg = f"""
+            We need a context for the mapcode {mapcode} or it is an invalid code.
+
+            Try again with the ISO 3166 standard 3-letter country code in the URL.
+            (For example: GBR for United Kingdom, ITA for Italy, etc)
+            More info at mapshare.xyz/about
+        """
     else:
-        # Context given, get coords
-        if mc.isvalid(f"{context} {mapcode}"):
-            coords = mc.decode(f"{context} {mapcode}")
-            initialZoom = 35
-            isValidMapcode = True
-        else:
-            msg = f"'{context} {mapcode}' is an invalid mapcode"
+        context = getCountryCode3(lookupData.get("country_code", "GB"))
+        coords = (lookupData.get("latitude", 51.5006785719964), lookupData.get("longitude", -0.12454569))
+        mapcode = mc.encode(coords[0], coords[1])[0][0]
+        isValidMapcode = True
+        initialZoom = 35
 
-    if not context == "AAA":
+    if coords:
         response = rg.get((coords[0], coords[1]))
         if response["admin1"]:
             countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
             territory = f"{response['admin1']}, {countryInfo.name}"
 
     # TODO: Add function to get territory from coordinates and add to AJAX view
+    # TODO: Make it so you don't have to have AAA as the context for international mapcodes
     vars = {
         "msg": msg,
-        "urlLat": coords[0] or 51.500675,
-        "urlLng": coords[1] or -0.124578,
+        "urlLat": coords[0] if coords else 51.500675,
+        "urlLng": coords[1] if coords else -0.124578,
         "context": context,
         "mapcode": mapcode,
         "initialZoom": initialZoom,
@@ -94,3 +95,10 @@ def getMapcodeAJAX(request):
             return HttpResponse(json.dumps({"success": False}), content_type="application/json")
     else:
         return HttpResponseForbidden()
+
+def favicon(request):
+    # TODO: Add favicon file
+    return HttpResponseNotFound()
+
+def about(request):
+    return render(request, "about.html")

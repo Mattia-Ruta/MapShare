@@ -1,3 +1,19 @@
+import mapcode as mc
+import math
+
+
+def isAValidMapcode(context, mapcode):
+    if not context or not mapcode:
+        return False
+    else:
+        if mc.isvalid(f"{context} {mapcode}", 1):
+            coords = mc.decode(mapcode, context)
+            if math.isnan(coords[0]) or math.isnan(coords[1]):
+                return False
+        else:
+            return False
+        return True
+
 def getCountryCode3(countryCode = "UK"):
     countries = {
         'AF':'AFG',

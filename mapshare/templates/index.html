@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Mapshare{% endblock %}
 {% block content%}
-<p>{% if msg %}<script text="text/javascript">alert("{{ msg }}");window.history.pushState({}, "", `/`);</script>{% endif %}</p>
+<p>{% if msg %}<script text="text/javascript">alert(`{{ msg }}`);window.history.pushState({}, "", `/`);</script>{% endif %}</p>
 
 <div style="position: relative;">
     <div id="map" style="height: 100%; width: 100%; position: fixed; z-index: -1;">

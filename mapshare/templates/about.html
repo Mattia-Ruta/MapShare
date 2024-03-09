@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% load static %}
+{% block title %}Mapshare - About{% endblock %}
+{% block content%}
+
+<h3>What is a mapcode?</h3>
+<p>A mapcode represents a precise location on Earth. </p>
+
+<h3>Context / Territories</h3>
+<p>The context part of a mapcode represents the area where the mapcode is based.</p>
+<p>This will usually be the ISO-3166 standard 3-letter country code.</p>
+<p><i>For example: GBR for United Kingdom, ITA for Italy, etc.</i></p>
+
+<p>Some countries with separated states can also have a precise context.</p>
+<p>This means the mapcode will be shorter and easier to remember.</p>
+<p><i>For example: For New York you can use US-NY instead of USA, <br>or for New South Wales you can use AU-NSW. AU-NSW DM9.XQ easier to use than AUS RK2M.LM0Q!</i></p>
+
+<h3>Examples</h3>
+<p>Here are some examples of mapshare links to try:</p>
+<ul>
+    <li><a href="{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/GBR/JJ.66">{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/GBR/JJ.66</a></li>
+    <li><a href="{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/ITA/HK.X8">{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/ITA/HK.X8</a></li>
+    <li><a href="{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/US-NJ/V6.5P">{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host}}/US-NJ/V6.5P</a></li>
+</ul>
+
+<p></p>
+
+{{ request.is_secure }}
+
+<p>Mapcodes are a free and open-source system. Anyone can use them! More info <a href="https://www.mapcode.com/about">on the official site</a>.</p>
+
+{% endblock %}
