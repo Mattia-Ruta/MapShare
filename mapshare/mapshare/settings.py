@@ -63,6 +63,7 @@ TEMPLATES = [
 # Variables
 IPDATA_API_KEY = os.getenv("IPDATA_API_KEY")
 MAPTILER_API_KEY = os.getenv("MAPTILER_API_KEY")
+GOOGLEMAPS_API_KEY = os.getenv("GOOGLEMAPS_API_KEY")
 
 WSGI_APPLICATION = 'mapshare.wsgi.application'
 

@@ -1,190 +1,164 @@
 {% extends "layout.html" %}
 {% load static %}
-{% block title %}Mapshare{% endblock %}
+{% block title %}Mapshare | Location in {{ territory }} {% endblock %}
 {% block content%}
 <p>{% if msg %}<script text="text/javascript">alert(`{{ msg }}`);window.history.pushState({}, "", `/`);</script>{% endif %}</p>
 
-<div style="position: relative;">
-    <div id="map" style="height: 100%; width: 100%; position: fixed; z-index: -1;">
-        <a href="https://www.maptiler.com">
-            <img src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler logo">
-        </a>
-    </div>
+<div id="gmap"></div>
 
-    <div id="legend-cnt">
-
-        <h2 id="mapcode-text" style=" font-size: 2.5rem;"><small>{{ context }}</small> {{ mapcode }} <a class="copy-link" href="javascript:;" title="Click to copy share link" data-context="{{ context }}" data-mapcode="{{ mapcode }}"><i class="material-icons">insert_link</i></a></h2> <p id="territory">Territory: {{ territory }}</p>
-        <div>
-            <ul id="collapsible-container" class="collapsible">
-                <li id="expand-box-list">
-                    <div id="expand-box" class="collapsible-header grey darken-1 white-text">Expand for more mapcodes <i id="expand-arrow" class="material-icons">arrow_drop_down</i></div>
-                    <div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>
-                </li>
-            </ul>
+<footer>
+    <section id="legend-cnt">
+        <div id="mapcodeContainer">
+            <h2 style="font-size: 2.5rem; display: inline"><small id="contextText"></small></h2>&nbsp
+            <h2 id="mapcodeText" style="font-size: 2.5rem; display: inline" title="This code represents this exact location!"><img height="35px" width="35px" src="{% static 'img/spinning.gif' %}"></img></h2>
         </div>
-    </div>
-</div>
-
-
-<div class="fixed-action-btn">
-    <a class="btn-floating btn-large blue" title="click to copy share link">
-        <i class="large material-icons">menu</i>
-    </a>
-    <ul>
-        <li><a class="btn-floating blue btn modal-trigger tooltipped" id="info-link" data-position="left" data-tooltip="More info on Mapcodes"><i class="material-icons">info</i></a></li>
-        <li><a class="btn-floating blue btn modal-trigger tooltipped share-link" id="share-link" data-position="left" data-tooltip="Click to copy share link" data-context="{{ context }}" data-mapcode="{{ mapcode }}"><i class="material-icons">link</i></a></li>
-    </ul>
-</div>
+        {% comment %} <a class="copy-link" href="javascript:;" title="Click to copy share link" data-context="{{ context }}" data-mapcode="{{ mapcode }}"><i class="material-icons">insert_link</i></a> {% endcomment %}
+        <p id="territoryCnt" title="Precision: 5m²">Territory: <strong id="territory"><img height="25px" width="25px" src="{% static 'img/spinning.gif' %}"></strong></p>
+    </section>
+</footer>
 
 <script type="text/javascript">
-    const key = "{{ maptilerAPIKey }}";
-    const urlLat = {{ urlLat }};
-    const urlLng = {{ urlLng }};
-    const tileLayer = "https://api.maptiler.com/maps/openstreetmap/{z}/{x}/{y}.jpg";
-    const map = L.map('map')
-        .setView([urlLat, urlLng], {{initialZoom}}); //starting position
-    const isValidMapcode = "{{ isValidMapcode }}" == "True";
-    var marker;
+    M.AutoInit();
+    const lookupData = {
+        country: "{{ lookupCountry }}",
+        countryCode: "{{ lookupCountryCode }}",
+        context: "{{ lookupContext }}",
+        region: "{{ lookupRegion }}",
+        city: "{{ lookupCity }}",
+        lat: {{ lookupLat }},
+        lng: {{ lookupLng }}
+    };
+    const territory = "{{ territory }}";
 
-    L.tileLayer(`${tileLayer}?key=${key}`,{
-      tileSize: 512,
-      zoomOffset: -1,
-      minZoom: 1,
-      attribution: "\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e",
-      crossOrigin: true
-    }).addTo(map);
+    // Sanitise URL params and alert if not correct
+    const pathArray = window.location.pathname.split("/").filter(n => n);
+    const defaultCoords = {lat: lookupData.lat, lng: lookupData.lng};
+    const defaultMapcode = {context: "{{ context }}", mapcode: "{{ mapcode }}"};
+    const precision = 0;    // Default for easy mapcodes, higher number means more letters in mapcode. Don't forget to set in precision text element as well!
+    let isFreshRequest = false;
+    let response;
+    const territoryElem = document.getElementById("territory");
 
-    if (isValidMapcode) {
-        marker = L.marker([urlLat, urlLng]).addTo(map);
+    const mapcode = {};
+    const coords = defaultCoords;
+
+    function setURL(url) {
+        window.history.pushState({}, "", url);
     }
+    function setMapcodeData(context, mapcode, territory) {
+        const contextElem = document.getElementById("contextText");
+        const mapcodeElem = document.getElementById("mapcodeText");
+        if (context == "AAA") {
+            contextElem.innerHTML = "";
 
-    function openExpandBox() {
-        const collapsibleContainer = document.getElementById("collapsible-container");
-        const instance = M.Collapsible.getInstance(collapsibleContainer);
-        instance.open();
-    }
-
-    function closeExpandBox() {
-        const collapsibleContainer = document.getElementById("collapsible-container");
-        const instance = M.Collapsible.getInstance(collapsibleContainer);
-        instance.close();
-    }
-
-    function setExpandBoxContent(content = "") {
-        closeExpandBox();
-        const expandBox = document.getElementById("expand-box-list");
-
-        // Clear box
-        const expandBoxBodies = document.querySelectorAll(".collapsible-body");
-        expandBoxBodies.forEach(elem => elem.remove());
-
-        if (content.length = 0) {
-            expandBox.innerHTML += `<div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>`;
+            territoryElem.innerHTML = "International";
         } else {
-            expandBox.innerHTML += content;
+            contextElem.innerHTML = context.toUpperCase();
+            territoryElem.innerHTML = territory;
+        }
+        mapcodeElem.innerHTML = mapcode.toUpperCase();
+        setURL(`/${context.toUpperCase()}/${mapcode.toUpperCase()}`);
+    }
+
+    if (pathArray.length == 0) {
+        isFreshRequest = true;
+        // Move map to general area of lookup data
+        response = encode(defaultCoords.lat, defaultCoords.lng);
+        if (response.length) {
+            console.log("Fresh request, generating mapcode from general location:");
+            console.log(response);
+            // First result is easiest
+            mapcode.context = response[0].territoryAlphaCode;
+            mapcode.mapcode = response[0].mapcode;
+            setMapcodeData(mapcode.context, mapcode.mapcode, `${lookupData.region}, ${lookupData.country}`);
+        } else {
+            // Unable to get a result, default to Big Ben
+            setMapcodeData("GBR", "JJ.66", "United Kingdom");
+        }
+    } else if (pathArray.length == 1) {
+        console.log("Just mapcode given, let's see if it's the International context");
+        mapcode.mapcode = pathArray[0];
+
+        response = decode(mapcode.mapcode, "AAA");
+        if (response) {
+            console.log(`International Context - ${mapcode.mapcode}`);
+            coords.lat = response.y;
+            coords.lng = response.x;
+            setMapcodeData("AAA", mapcode.mapcode, "International");
+            // TODO: Suggest easier mapcode
+        } else {
+            // Use context from request location
+            console.log(`Not international, use context from request general area (${lookupData.context})`);
+            response = decode(mapcode.mapcode, lookupData.context);
+            if (response) {
+                console.log(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`);
+                setMapcodeData(lookupData.context, mapcode.mapcode, lookupData.country);
+            } else {
+                // Invalid
+                console.error(`${mapcode.mapcode} is not a valid mapcode! Or at least needs context...`);
+                M.toast({
+                    html: `${mapcode.mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)`,
+                    displayLength: 10000,
+                    classes: "red"
+                });
+                setMapcodeData("GBR", "JJ.66", "United Kingdom");
+            }
+        }
+    } else if (pathArray.length == 2) {
+        mapcode.context = pathArray[0];
+        mapcode.mapcode = pathArray[1];
+        response = decode(mapcode.mapcode, mapcode.context);
+        if (response) {
+            console.log(`Mapcode ${mapcode.context} ${mapcode.mapcode} found`);
+            coords.lat = response.y;
+            coords.lng = response.x;
+            response = encode(coords.lat, coords.lng)[0];
+            setMapcodeData(mapcode.context, mapcode.mapcode, territory);
+        } else {
+            console.error(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode!`);
+            M.toast({
+                html: `${mapcode.context} ${mapcode.mapcode} is not a valid mapcode, try again with a valid context and mapcode (ex: https://mapshare.xyz/GBR/JJ.66)`,
+                displayLength: 10000,
+                classes: "red"
+            });
+            setMapcodeData("GBR", "JJ.66", "United Kingdom");
+            
         }
     }
 
-    function refreshLinks() {
-        const shareLinkElems = document.querySelectorAll(".share-link");
-        const copyLinkElems = document.querySelectorAll(".copy-link");
-
-        shareLinkElems.forEach((elem) => {
-            elem.addEventListener("click", () => {
-                const url = window.location.origin + `/${elem.dataset.context}/${elem.dataset.mapcode}`;
-                navigator.clipboard.writeText(url);
-                M.toast({html: "Share link copied to clipboard!", classes: "rounded"});
-            });
-        });
-
-        copyLinkElems.forEach((elem) => {
-            elem.addEventListener("click", () => {
-                navigator.clipboard.writeText(`${elem.dataset.context} ${elem.dataset.mapcode}`);
-                M.toast({html: "Mapcode copied to clipboard!", classes: "rounded"});
-            })
-        })
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const actionButtons = document.querySelectorAll(".fixed-action-btn");
-        const actionButtonInstances = M.FloatingActionButton.init(actionButtons, {});
-        const tooltips = document.querySelectorAll(".tooltipped");
-        const tooltipInstances = M.Tooltip.init(tooltips, {});
-
-        const collapsibles = document.querySelectorAll(".collapsible");
-        const expandBox = document.getElementById("expand-box");
-        const collapsibleOptions = {
-            onOpenStart: function() {document.getElementById("expand-arrow").innerHTML = "arrow_drop_up"},
-            onCloseStart: function() {document.getElementById("expand-arrow").innerHTML = "arrow_drop_down"}
-        };
-        const collapsibleInstances = M.Collapsible.init(collapsibles, collapsibleOptions);
-
-        refreshLinks();
-        // TODO: Add refresh for extra mapcodes for first load
-
-    });
-
-    map.on("click", function(e) {
-        // Add marker to map on click
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-        const contextText = document.getElementById("context-text");
-        const mapcodeText = document.getElementById("mapcode-text");
-        const territoryText = document.getElementById("territory");
-        const noMapcodesDiv = `<div id="expand-box-no-mapcodes" class="collapsible-body">-- No other mapcodes --</div>`;
-
-        if (marker) map.removeLayer(marker);
-        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
-        console.log([lat,lng]);
-
-        fetch("/getMapcodeAJAX", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({
-                lat: lat,
-                lng: lng
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            const success = data.success == "true";
-            const url = window.location.origin;
-            const expandBox = document.getElementById("expand-box");
-            let content = "Mapcode for this location not available";
-            let territory = "Territory: International";
-            delete data.success
-            if (success) {
-                console.log(data);
-                content = "";
-
-                data.mapcodes.forEach((result, i) => {
-                    if (i == 0) {
-                        // Main mapcode
-                        mapcodeText.innerHTML = `<small>${result.context}</small> ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a><br>`;
-                        territoryText.innerHTML = `Territory: ${result.territory}`;
-                        window.history.pushState({}, "", `/${result.context}/${result.mapcode}`);
-                    } else if (result.context == "AAA"){
-                        // International mapcode
-                        content += `<div class="collapsible-body lime lighten-4 black-text">(International) ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a></div>`;
-                    } else {
-                        // Append extra mapcodes to expanding box
-                        content += `<div class="collapsible-body"><small>${result.context}</small> ${result.mapcode} <a class="share-link" href="javascript:;" data-context="${result.context}" data-mapcode="${result.mapcode}"><i class="material-icons">insert_link</i></a></div>`;
-                    }
-                    setExpandBoxContent(content);
-                });
-                refreshLinks();
-            } else {
-                M.toast({html: "No valid mapcode found"});
+    function initMap() {
+        let icon = document.createElement("div");
+        icon.innerHTML = "<i class='material-icons'>gps_not_fixed</i>";
+        const {AdvancedMarkerElement, PinElement} = google.maps.importLibrary("marker");
+        const map = new google.maps.Map(
+            document.getElementById("gmap"),
+            {
+                zoom: 10,
+                center: coords
             }
+        );
+        let infoWindow = new google.maps.InfoWindow({
+            content: "Mapcode generated from your general area",
+            position: defaultCoords
         });
-    });
 
-    // TODO: Implement Geoapify for autosuggest
-    
+        if (isFreshRequest) infoWindow.open(map);
+        map.addListener("click", (mapsMouseEvent) => {
+            infoWindow.close();
+            const newCoords = mapsMouseEvent.latLng.toJSON();
+            console.log("New coordinates: ");
+            console.log(newCoords);
+            response = encode(newCoords.lat, newCoords.lng);
+            console.log(response);
+            const newMapcode = {
+                context: response[0].territoryAlphaCode,
+                mapcode: response[0].mapcode
+            };
+            const newTerritory = getTerritoryFullname(response[0].territoryAlphaCode);
+            setMapcodeData(newMapcode.context, newMapcode.mapcode, newTerritory);
+            window.location.reload();
+        });
+    }
 </script>
 
 {% endblock %}

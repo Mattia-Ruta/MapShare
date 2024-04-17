@@ -9,6 +9,7 @@ import json
 import ipdata
 import math
 import pycountry
+import googlemaps
 
 
 def index(request, mapcode = False, context = False):
@@ -22,6 +23,7 @@ def index(request, mapcode = False, context = False):
     if client_ip == "127.0.0.1": client_ip = "31.94.18.51"
     ipdata.api_key = settings.IPDATA_API_KEY
     lookupData = ipdata.lookup(client_ip)
+    print(lookupData)
 
     # TODO: Maybe implement in future
     # if not context:
@@ -59,7 +61,7 @@ def index(request, mapcode = False, context = False):
     # TODO: Add function to get territory from coordinates and add to AJAX view
     # TODO: Make it so you don't have to have AAA as the context for international mapcodes
     vars = {
-        "msg": msg,
+        "msg": "",
         "urlLat": coords[0] if coords else 51.500675,
         "urlLng": coords[1] if coords else -0.124578,
         "context": context,
@@ -67,7 +69,15 @@ def index(request, mapcode = False, context = False):
         "initialZoom": initialZoom,
         "isValidMapcode": isValidMapcode,
         "maptilerAPIKey": settings.MAPTILER_API_KEY,
-        "territory": territory
+        "territory": territory,
+        "googlemapsAPIKey": settings.GOOGLEMAPS_API_KEY,
+        "lookupCountry": lookupData.country_name,
+        "lookupCountryCode": lookupData.country_code,
+        "lookupContext": getCountryCode3(lookupData.country_code),
+        "lookupRegion": lookupData.region,
+        "lookupCity": lookupData.city,
+        "lookupLat": lookupData.latitude,
+        "lookupLng": lookupData.longitude,
     }
     return render(request, "index.html", vars)
 

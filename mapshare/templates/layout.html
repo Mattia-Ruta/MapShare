@@ -13,23 +13,31 @@
     <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" type="text/css">
     <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet" type="text/css">
     <title>{% block title %}{% endblock %}</title>
+    <meta name="og:title" content="Mapshare"/>
+    <meta name="og:url" content="https://mapshare.xyz{{ request.get_full_path }}"/>
+    <meta name="og:description" content="An easy location-sharing site using mapcodes"/>
+    <meta name="description" content="An easy location-sharing website with interactive map, implementing mapcodes! Mapcodes are a short reference for an accurate location."/>
   </head>
 
   <body>
-    <nav class="light-blue lighten-1" role="navigation" style="z-index: 999;">
-        <div class="nav-wrapper container"><a id="logo-container" href="{% url 'index' %}" class="brand-logo">Mapshare</a>
-          <ul class="right hide-on-med-and-down">
-            {% comment %} <li><a href="#">Navbar Link</a></li> {% endcomment %}
-          </ul>
-          <ul id="nav-mobile" class="sidenav">
-            {% comment %} <li><a href="#">Navbar Link</a></li> {% endcomment %}
-          </ul>
-          <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
-        </div>
-      </nav>
+    <nav class="grey darken-1" role="navigation">
+      <div class="nav-wrapper container"><a id="logo-container" href="{% url 'index' %}" class="brand-logo">Mapshare</a>
+        <ul class="right hide-on-med-and-down">
+          {% comment %} <li><a href="#">Navbar Link</a></li> {% endcomment %}
+        </ul>
+        <ul id="nav-mobile" class="sidenav">
+          {% comment %} <li><a href="#">Navbar Link</a></li> {% endcomment %}
+        </ul>
+        <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+      </div>
+    </nav>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ googlemapsAPIKey }}&loading=async&callback=initMap"></script>
+    <script type="text/javascript" src="{% static 'js/mapcode.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/ctrynams.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/ndata.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/leaflet.js' %}"></script>
+    <script src="{% static 'js/materialize.min.js' %}"></script>
     {% block content %}{% endblock %}
-    <script type="text/javascript" src="{% static 'js/materialize.min.js' %}"></script>
     
 </body>
 </html>
