@@ -1,6 +1,7 @@
-Django==4.2.7
+django==4.2.7
 django-ipware==6.0.3
 fontawesomefree==6.5.1
+googlemaps==4.10.0
 ipdata==4.0.7
 mysqlclient==2.2.0
 mapcode==2.5.5.0
