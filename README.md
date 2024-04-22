@@ -8,6 +8,7 @@ An easy location sharing app
 - python3-dev
 - python3.11-venv
 - libmysqlclient-dev
+- python3-dotenv
 
 ## Python3 Virtual Environment
 
