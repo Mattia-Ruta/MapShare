@@ -19,6 +19,8 @@
 
 <script type="text/javascript">
     M.AutoInit();
+
+    const debug = "{{ debug }}" == "True";
     const lookupData = {
         country: "{{ lookupCountry }}",
         countryCode: "{{ lookupCountryCode }}",
@@ -143,20 +145,40 @@
         });
 
         if (isFreshRequest) infoWindow.open(map);
+
         map.addListener("click", (mapsMouseEvent) => {
             infoWindow.close();
             const newCoords = mapsMouseEvent.latLng.toJSON();
-            console.log("New coordinates: ");
-            console.log(newCoords);
-            response = encode(newCoords.lat, newCoords.lng);
-            console.log(response);
-            const newMapcode = {
-                context: response[0].territoryAlphaCode,
-                mapcode: response[0].mapcode
-            };
-            const newTerritory = getTerritoryFullname(response[0].territoryAlphaCode);
-            setMapcodeData(newMapcode.context, newMapcode.mapcode, newTerritory);
-            window.location.reload();
+            if (debug) console.log("New coordinates: ", newCoords);
+
+            // Get mapcode from new Coords
+            async function ajaxGetMapcodeFromCoords(lat, lng) {
+                const errorMsg = "An error has occured, please refresh the page and try again";
+                const response = await fetch("/getMapcodeAJAX", {
+                    method: "POST",
+                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
+                    body: JSON.stringify({
+                        lat: lat,
+                        lng: lng
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.mapcodes.length) {
+                        const mapcodes = data.mapcodes;
+                        setMapcodeData(mapcodes[0].context, mapcodes[0].mapcode, mapcodes[0].territory);
+                        if (debug) console.log("Mapcodes from Coords: ", mapcodes);
+                    } else {
+                        console.error(data.error)
+                        alert(errorMsg);
+                    }
+                })
+                .catch((error) => {
+                    console.error(`Error: ${error}`);
+                    alert(errorMsg);
+                });
+            }
+            ajaxGetMapcodeFromCoords(newCoords.lat, newCoords.lng);
         });
     }
 </script>

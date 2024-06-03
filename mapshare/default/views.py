@@ -13,7 +13,7 @@ import googlemaps
 
 
 def index(request, mapcode = False, context = False):
-    msg = None
+    msg = ""
     initialZoom = 10
     isValidMapcode = isAValidMapcode(context, mapcode)
     territory = context
@@ -23,12 +23,8 @@ def index(request, mapcode = False, context = False):
     if client_ip == "127.0.0.1": client_ip = "31.94.18.51"
     ipdata.api_key = settings.IPDATA_API_KEY
     lookupData = ipdata.lookup(client_ip)
-    print(lookupData)
-
-    # TODO: Maybe implement in future
-    # if not context:
-    #     # Try to pull context from request
-    #     context = getCountryCode3(lookupData.get("country_code", "GB"))
+    if settings.DEBUG:
+        print(f"Lookup Data: {lookupData}")
 
     if mapcode and context and isValidMapcode:
         coords = mc.decode(mapcode, context)
@@ -38,13 +34,18 @@ def index(request, mapcode = False, context = False):
         context = ""
         mapcode = ""
     elif mapcode and not context:
-        msg = f"""
-            We need a context for the mapcode {mapcode} or it is an invalid code.
+        context = getCountryCode3(lookupData.get("country_code", "GB"))
+        mapcode = mc.encode(lookupData["latitude"], lookupData["longitude"])[0][0]
+        if mc.isvalid(f"{context} {mapcode}"):
+            coords = (lookupData.get("latitude", 51.5006785719964), lookupData.get("longitude", -0.12454569))
+        else:
+            msg = f"""
+                We need a context for the mapcode {mapcode} or it is an invalid code.
 
-            Try again with the ISO 3166 standard 3-letter country code in the URL.
-            (For example: GBR for United Kingdom, ITA for Italy, etc)
-            More info at mapshare.xyz/about
-        """
+                Try again with the ISO 3166 3-letter country code in the URL.
+                (For example: GBR for United Kingdom, ITA for Italy, etc)
+                More info at https://mapshare.xyz/about
+            """
     else:
         context = getCountryCode3(lookupData.get("country_code", "GB"))
         coords = (lookupData.get("latitude", 51.5006785719964), lookupData.get("longitude", -0.12454569))
@@ -61,7 +62,8 @@ def index(request, mapcode = False, context = False):
     # TODO: Add function to get territory from coordinates and add to AJAX view
     # TODO: Make it so you don't have to have AAA as the context for international mapcodes
     vars = {
-        "msg": "",
+        "msg": msg,
+        "debug" : settings.DEBUG,
         "urlLat": coords[0] if coords else 51.500675,
         "urlLng": coords[1] if coords else -0.124578,
         "context": context,
@@ -88,21 +90,17 @@ def getMapcodeAJAX(request):
         response = mc.encode(body["lat"], body["lng"])
         if len(response) > 0:
             payload = {"success": "true", "mapcodes": []}
-            for mapcode in response:
-                territory = mapcode[1]
+            for elem in response:
+                mapcode = elem[0]
+                territory = elem[1]
                 locationInfo = rg.get((body["lat"], body["lng"]))
-                if locationInfo["cc"] == "US":
-                    territory = f"{locationInfo['admin1']}, United States"
-                if mapcode[1] == "AAA":
-                    territory = "International"
-                else:
-                    country = pycountry.countries.get(alpha_3=mapcode[1])
-                    if country:
-                        territory = country.name
-                payload["mapcodes"].append({"context": mapcode[1], "mapcode": mapcode[0], "territory": territory or mapcode[1]})
+                country = pycountry.countries.get(alpha_2=locationInfo["cc"]).name
+                territory = f"{locationInfo['admin1']}, {country}"
+
+                payload["mapcodes"].append({"context": elem[1], "mapcode": elem[0], "territory": territory or elem[1]})
             return HttpResponse(json.dumps(payload), content_type="application/json")
         else:
-            return HttpResponse(json.dumps({"success": False}), content_type="application/json")
+            return HttpResponse(json.dumps({"success": False, "error": "Invalid coordinates"}), content_type="application/json")
     else:
         return HttpResponseForbidden()
 
