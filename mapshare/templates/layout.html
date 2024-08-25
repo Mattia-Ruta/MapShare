@@ -13,6 +13,7 @@
     <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" type="text/css">
     <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet" type="text/css">
     <link href="{% static 'node_modules/mapbox-gl/dist/mapbox-gl.css' %}" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="{% static 'node_modules/mapbox-gl/dist/mapbox-gl.js' %}"></script>
     <title>{% block title %}{% endblock %}</title>
     <meta name="og:title" content="Mapshare"/>
     <meta name="og:url" content="https://mapshare.xyz{{ request.get_full_path }}"/>
@@ -35,7 +36,7 @@
       </div>
     </nav>
 
-    <script type="text/javascript" src="{% static 'node_modules/mapbox-gl/dist/mapbox-gl.js' %}"></script>
+
     <script type="text/javascript" src="{% static 'js/mapcode.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/ctrynams.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/ndata.js' %}"></script>
