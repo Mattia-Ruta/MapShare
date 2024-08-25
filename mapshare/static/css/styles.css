@@ -1,33 +1,8 @@
-#gmap {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    top: 60px;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: grey;
-}
-
-#legend-cnt {
-    box-sizing: border-box;
-    position: absolute;
-    display: block;
-    z-index: 999;
-    color: white;
-    background-color: #444444;
-    padding: 15px;
-    bottom: 0;
-    left: 0;
-    width: inherit;
-    height: inherit;
-    margin: auto;
-    align-content: center;
-}
-
-nav {
+#map {
     position: absolute;
     top: 0;
-    height: 60px;
-    z-index: 999;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
 }

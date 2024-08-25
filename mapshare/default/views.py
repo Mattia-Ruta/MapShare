@@ -71,6 +71,7 @@ def index(request, mapcode = False, context = False):
         "initialZoom": initialZoom,
         "isValidMapcode": isValidMapcode,
         "maptilerAPIKey": settings.MAPTILER_API_KEY,
+        "mapboxAPIKey": settings.MAPBOX_API_KEY,
         "territory": territory,
         "googlemapsAPIKey": settings.GOOGLEMAPS_API_KEY,
         "lookupCountry": lookupData.country_name,
