@@ -53,6 +53,13 @@
     function setURL(url) {
         window.history.pushState({}, "", url);
     }
+    function moveMap(lat, lng) {
+        console.log(`Moving map to: ${lat}, ${lng}`);
+        map.flyTo({
+            center: [lng, lat],
+            essential: true
+        });
+    }
     function setMapcodeData(context, mapcode, territory) {
         const contextElem = document.getElementById("contextText");
         const mapcodeElem = document.getElementById("mapcodeText");
@@ -95,7 +102,6 @@
     });
     map.on("load", function() {
         map.resize();
-        if (isFreshRequest) bootstrapAlert("Mapcode generated from your general area", "info");
     });
 
     // Default Marker
@@ -108,14 +114,17 @@
         response = encode(defaultCoords.lat, defaultCoords.lng);
         if (response.length) {
             console.log("Fresh request, generating mapcode from general location:");
-            console.log(response);
+            bootstrapAlert("Mapcode generated from your general area", "info");
+            console.log("Mapcodes using initial lat/lng: ", response);
             // First result is easiest
             mapcode.context = response[0].territoryAlphaCode;
             mapcode.mapcode = response[0].mapcode;
             setMapcodeData(mapcode.context, mapcode.mapcode, `${lookupData.region}, ${lookupData.country}`);
+            moveMap(defaultCoords.lat, defaultCoords.lng);
         } else {
             // Unable to get a result, default to Big Ben
             setMapcodeData("GBR", "JJ.66", "United Kingdom");
+            moveMap(51.500675, -0.124578);
         }
     } else if (pathArray.length == 1) {
         console.log("Just mapcode given, let's see if it's the International context");
@@ -124,17 +133,30 @@
         response = decode(mapcode.mapcode, "AAA");
         if (response) {
             console.log(`International Context - ${mapcode.mapcode}`);
-            coords.lat = response.y;
-            coords.lng = response.x;
             setMapcodeData("AAA", mapcode.mapcode, "International");
-            // TODO: Suggest easier mapcode
+            moveMap(response.y, response.x);
+            currentMarker.remove();
+            newMarker = new mapboxgl.Marker().setLngLat([response.x, response.y]).addTo(map);
+            currentMarker = newMarker;
+            response = encode(response.y, response.x);
+            if (response.length > 1) {
+                // Easier mapcode here, let's suggest it
+                let easierMapcodeInfo = response[0];
+                let currentDomain = window.location.origin;
+                bootstrapAlert(`The given mapcode is using the international context, try using mapcode ${easierMapcodeInfo.fullmapcode} (<a href="${currentDomain}/${easierMapcodeInfo.territoryAlphaCode}/${easierMapcodeInfo.mapcode}">${currentDomain}/${easierMapcodeInfo.territoryAlphaCode}/${easierMapcodeInfo.mapcode}</a>)`, "info");
+            }
         } else {
             // Use context from request location
             console.log(`Not international, use context from request general area (${lookupData.context})`);
             response = decode(mapcode.mapcode, lookupData.context);
             if (response) {
                 console.log(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`);
+                bootstrapAlert(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`, "info");
                 setMapcodeData(lookupData.context, mapcode.mapcode, lookupData.country);
+                currentMarker.remove();
+                newMarker = new mapboxgl.Marker().setLngLat([response.x, response.y]).addTo(map);
+                currentMarker = newMarker;
+                moveMap(response.y, response.x);
             } else {
                 // Invalid
                 console.error(`${mapcode.mapcode} is not a valid mapcode! Or at least needs context...`);
@@ -147,78 +169,20 @@
         mapcode.mapcode = pathArray[1];
         response = decode(mapcode.mapcode, mapcode.context);
         if (response) {
-            console.log(`Mapcode ${mapcode.context} ${mapcode.mapcode} found`);
-            coords.lat = response.y;
-            coords.lng = response.x;
-            response = encode(coords.lat, coords.lng)[0];
-            setMapcodeData(mapcode.context, mapcode.mapcode, territory);
-        } else {
-            console.error(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode!`);
-            bootstrapAlert(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode, try again with a valid context and mapcode (ex: https://mapshare.xyz/GBR/JJ.66)`);
-            setMapcodeData("GBR", "JJ.66", "United Kingdom");
-            
-        }
-    }
-
-    if (pathArray.length == 0) {
-        isFreshRequest = true;
-        // Move map to general area of lookup data
-        response = encode(defaultCoords.lat, defaultCoords.lng);
-        if (response.length) {
-            console.log("Fresh request, generating mapcode from general location:");
-            console.log(response);
-            // First result is easiest
-            mapcode.context = response[0].territoryAlphaCode;
-            mapcode.mapcode = response[0].mapcode;
-            setMapcodeData(mapcode.context, mapcode.mapcode, `${lookupData.region}, ${lookupData.country}`);
-        } else {
-            // Unable to get a result, default to Big Ben
-            setMapcodeData("GBR", "JJ.66", "United Kingdom");
-        }
-    } else if (pathArray.length == 1) {
-        console.log("Just mapcode given, let's see if it's the International context");
-        mapcode.mapcode = pathArray[0];
-
-        response = decode(mapcode.mapcode, "AAA");
-        if (response) {
-            console.log(`International Context - ${mapcode.mapcode}`);
-            coords.lat = response.y;
-            coords.lng = response.x;
-            setMapcodeData("AAA", mapcode.mapcode, "International");
-            // TODO: Suggest easier mapcode
-        } else {
-            // Use context from request location
-            console.log(`Not international, use context from request general area (${lookupData.context})`);
-            response = decode(mapcode.mapcode, lookupData.context);
+            mapcode.context = pathArray[0];
+            mapcode.mapcode = pathArray[1];
+            response = decode(mapcode.mapcode, mapcode.context);
             if (response) {
-                console.log(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`);
-                setMapcodeData(lookupData.context, mapcode.mapcode, lookupData.country);
-            } else {
-                // Invalid
-                console.error(`${mapcode.mapcode} is not a valid mapcode! Or at least needs context...`);
-                bootstrapAlert(`${mapcode.mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)`);
-                setMapcodeData("GBR", "JJ.66", "United Kingdom");
+                console.log(`Mapcode ${mapcode.context} ${mapcode.mapcode} found`);
+                coords.lat = response.y;
+                coords.lng = response.x;
+                response = encode(coords.lat, coords.lng)[0];
+                setMapcodeData(mapcode.context, mapcode.mapcode, territory);
+                map.flyTo({
+                    center: [coords.lng, coords.lat],
+                    essential: true
+                });
             }
-        }
-    } else if (pathArray.length == 2) {
-        mapcode.context = pathArray[0];
-        mapcode.mapcode = pathArray[1];
-        response = decode(mapcode.mapcode, mapcode.context);
-        if (response) {
-            console.log(`Mapcode ${mapcode.context} ${mapcode.mapcode} found`);
-            coords.lat = response.y;
-            coords.lng = response.x;
-            response = encode(coords.lat, coords.lng)[0];
-            setMapcodeData(mapcode.context, mapcode.mapcode, territory);
-            map.flyTo({
-                center: [coords.lng, coords.lat],
-                essential: true
-            });
-        } else {
-            console.error(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode!`);
-            bootstrapAlert(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode, try again with a valid context and mapcode (ex: https://mapshare.xyz/GBR/JJ.66)`);
-            setMapcodeData("GBR", "JJ.66", "United Kingdom");
-            
         }
     }
 
