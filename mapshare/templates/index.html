@@ -4,7 +4,7 @@
 {% block content%}
 <p>{% if msg %}<script text="text/javascript">bootstrapAlert(`{{ msg }}`);window.history.pushState({}, "", `/`);</script>{% endif %}</p>
 
-<div id="alert-container"></div>
+<div id="alert-container" class="container-sm"></div>
 <div class="row">
     <div class="col-12"><div id="map"></div></div>
 </div>
@@ -81,7 +81,7 @@
     function bootstrapAlert(alertMsg, level = "danger") {
         const alertContainer = document.getElementById("alert-container");
         const alertWrapper = document.createElement("div");
-        alertWrapper.innerHTML = `<div class="alert alert-${level} alert-dismissible" role="alert" style="z-index: 999;"><div>${alertMsg}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+        alertWrapper.innerHTML = `<div class="alert alert-${level} alert-dismissible" role="alert" style="margin-top: 4em;"><div>${alertMsg}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
         alertContainer.append(alertWrapper);
     }
 
