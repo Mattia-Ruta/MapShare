@@ -48,7 +48,7 @@
     const spinningGif = `<img height="35px" width="35px" src="{% static 'img/spinning.gif' %}"></img>`;
 
     const mapcode = {};
-    const coords = defaultCoords;
+    let coords = {lat: "{{ urlLat }}", lng: "{{ urlLng }}"};
 
     function setURL(url) {
         window.history.pushState({}, "", url);
@@ -90,7 +90,7 @@
     const map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/mapbox/satellite-streets-v12",
-        center: [lookupData.lng, lookupData.lat],
+        center: [coords.lng, coords.lat],
         zoom: 12
     });
     map.on("load", function() {
@@ -99,7 +99,7 @@
     });
 
     // Default Marker
-    const defaultMarker = new mapboxgl.Marker().setLngLat([lookupData.lng, lookupData.lat]).addTo(map);
+    const defaultMarker = new mapboxgl.Marker().setLngLat([coords.lng, coords.lat]).addTo(map);
     currentMarker = defaultMarker;
 
     if (pathArray.length == 0) {
@@ -210,6 +210,10 @@
             coords.lng = response.x;
             response = encode(coords.lat, coords.lng)[0];
             setMapcodeData(mapcode.context, mapcode.mapcode, territory);
+            map.flyTo({
+                center: [coords.lng, coords.lat],
+                essential: true
+            });
         } else {
             console.error(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode!`);
             bootstrapAlert(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode, try again with a valid context and mapcode (ex: https://mapshare.xyz/GBR/JJ.66)`);
