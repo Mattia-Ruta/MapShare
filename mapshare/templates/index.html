@@ -276,11 +276,11 @@
     // Share Button
     const shareBtn = document.getElementById("shareBtn");
     shareBtn.addEventListener("click", (e) => {
-        console.log("https://www.google.com/maps/search/?api=1&query=51.796801159473006%2C-0.001433835694768959");
+        const contextElem = document.getElementById("contextText");
+        const mapcodeTextElem = document.getElementById("mapcodeText");
         if (navigator.share) {
             navigator.share({
-                title: "Mapshare",
-                text: "Check out this exact location",
+                title: `Mapshare - Exact location in ${territoryElem.innerHTML} (${contextElem.innerHTML} ${mapcodeTextElem.innerHTML})`,
                 url: window.location.href
             });
         } else {
