@@ -4,11 +4,15 @@
 {% block content%}
 <p>{% if msg %}<script text="text/javascript">bootstrapAlert(`{{ msg }}`);window.history.pushState({}, "", `/`);</script>{% endif %}</p>
 
-<div id="alert-container" class="container-sm"></div>
+<!-- Alert -->
+<div id="alert-container" class="container-fluid"></div>
+
+<!-- Map -->
 <div class="row">
     <div class="col-12"><div id="map"></div></div>
 </div>
 
+<!-- Mapcode Info Box -->
 <div class="card fixed-bottom" style="width: 40%; background-color: #444444;">
     <div class="card-body">
         <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg" style="display: inline;"><i class="fa-solid fa-copy"></i></button>
@@ -18,6 +22,15 @@
     </div>
     <div class="card-footer text-muted">
         <p id="territoryCnt" title="Precision: 5m²" style="color: white"><i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory"><img height="25px" width="25px" src="{% static 'img/spinning.gif' %}"></strong></p>
+    </div>
+</div>
+
+<!-- Top-Right Buttons -->
+<div class="container" style="margin-top: 60px;">
+    <div class="row justify-content-end" style="margin: 5px;">
+        <div class="col-1">
+            <button id="locationBtn" type="button" class="btn btn-info btn-lg" title="Click to get mapcode for your current location"><i class="fa-solid fa-location-arrow"></i></button>
+        </div>
     </div>
 </div>
 
@@ -90,6 +103,42 @@
         const alertWrapper = document.createElement("div");
         alertWrapper.innerHTML = `<div class="alert alert-${level} alert-dismissible" role="alert" style="margin-top: 4em;"><div>${alertMsg}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
         alertContainer.append(alertWrapper);
+    }
+    async function ajaxGetMapcodeFromCoords(lat, lng) {
+        const errorMsg = "An error has occured, please refresh the page and try again";
+        const response = await fetch("/getMapcodeAJAX", {
+            method: "POST",
+            headers: {"X-CSRFToken": "{{ csrf_token }}"},
+            body: JSON.stringify({
+                lat: lat,
+                lng: lng
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.mapcodes.length) {
+                const mapcodes = data.mapcodes;
+
+                // Add new marker
+                currentMarker.remove();
+                newMarker = new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map);
+                currentMarker = newMarker;
+
+                setMapcodeData(mapcodes[0].context, mapcodes[0].mapcode, mapcodes[0].territory);
+                map.flyTo({
+                    center: [lng, lat],
+                    essential: true
+                });
+                if (debug) console.log("Mapcodes from Coords: ", mapcodes);
+            } else {
+                console.error(data.error)
+                alert(errorMsg);
+            }
+        })
+        .catch((error) => {
+            console.error(`Error: ${error}`);
+            bootstrapAlert("Sorry, couldn't get a mapcode from given location");
+        });
     }
 
     // Load map
@@ -186,6 +235,30 @@
         }
     }
 
+    // Location Button
+    const locationBtn = document.getElementById("locationBtn");
+    locationBtn.addEventListener("click", (e) => {
+        if ("geolocation" in navigator) {
+            function locationSuccess(position) {
+                const coords = position.coords;
+                ajaxGetMapcodeFromCoords(coords.latitude, coords.longitude);
+                console.log(`New coordinates: ${coords.latitude}, ${coords.longitude}`);
+            }
+            function locationError() {
+                bootstrapAlert("Sorry, position can't be found", "danger");
+            }
+
+            const locationOptions = {
+                enableHighAccuracy: true,
+                maximumAge: 30000,
+                timeout: 27000
+            };
+            navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+        } else {
+            bootstrapAlert("Location services not available");
+        }
+    });
+
     map.on("click", (e) => {
         const newCoords = e.lngLat;
         console.log(newCoords);
@@ -194,42 +267,6 @@
         clearMapcodeData();
 
         // Get mapcode from new Coords
-        async function ajaxGetMapcodeFromCoords(lat, lng) {
-            const errorMsg = "An error has occured, please refresh the page and try again";
-            const response = await fetch("/getMapcodeAJAX", {
-                method: "POST",
-                headers: {"X-CSRFToken": "{{ csrf_token }}"},
-                body: JSON.stringify({
-                    lat: lat,
-                    lng: lng
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.mapcodes.length) {
-                    const mapcodes = data.mapcodes;
-
-                    // Add new marker
-                    currentMarker.remove();
-                    newMarker = new mapboxgl.Marker().setLngLat([newCoords.lng, newCoords.lat]).addTo(map);
-                    currentMarker = newMarker;
-
-                    setMapcodeData(mapcodes[0].context, mapcodes[0].mapcode, mapcodes[0].territory);
-                    map.flyTo({
-                        center: [newCoords.lng, newCoords.lat],
-                        essential: true
-                    });
-                    if (debug) console.log("Mapcodes from Coords: ", mapcodes);
-                } else {
-                    console.error(data.error)
-                    alert(errorMsg);
-                }
-            })
-            .catch((error) => {
-                console.error(`Error: ${error}`);
-                alert(errorMsg);
-            });
-        }
         ajaxGetMapcodeFromCoords(newCoords.lat, newCoords.lng);
     });
 
