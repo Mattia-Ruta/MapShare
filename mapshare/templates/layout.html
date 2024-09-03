@@ -41,7 +41,6 @@
     <script type="text/javascript" src="{% static 'js/ndata.js' %}"></script>
     <script src="{% static 'js/materialize.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bootstrap/bootstrap.bundle.min.js' %}"></script>
-    
-    <div class="container-fluid">{% block content %}{% endblock %}</div>
+    {% block content %}{% endblock %}
 </body>
 </html>
