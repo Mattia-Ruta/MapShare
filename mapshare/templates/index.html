@@ -101,8 +101,12 @@
     function bootstrapAlert(alertMsg, level = "danger") {
         const alertContainer = document.getElementById("alert-container");
         const alertWrapper = document.createElement("div");
+        alertContainer.innerHTML = "";
         alertWrapper.innerHTML = `<div class="alert alert-${level} alert-dismissible" role="alert" style="margin-top: 4em;"><div>${alertMsg}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
         alertContainer.append(alertWrapper);
+        setTimeout(function() {
+            alertContainer.innerHTML = "";
+        }, 5000);
     }
     async function ajaxGetMapcodeFromCoords(lat, lng) {
         const errorMsg = "An error has occured, please refresh the page and try again";
