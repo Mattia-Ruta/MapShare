@@ -40,7 +40,7 @@
 <div id="alert-container" class="container-med"></div>
 
 <!-- Map -->
-<div id="map">
+<div id="gmap"></div>
 
 <script type="text/javascript">
     const key = "{{ mapboxAPIKey }}";
@@ -76,10 +76,7 @@
     }
     function moveMap(lat, lng) {
         console.log(`Moving map to: ${lat}, ${lng}`);
-        map.flyTo({
-            center: [lng, lat],
-            essential: true
-        });
+        // TODO: Fly to 
     }
     function setMapcodeData(context, mapcode, territory) {
         const contextElem = document.getElementById("contextText");
@@ -154,8 +151,8 @@
     }
 
     // Load map
-    mapboxgl.accessToken = key;
-    const map = new mapboxgl.Map({
+    {% comment %} mapboxgl.accessToken = key;
+    let map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/lupinothewolf/cm0n09blb00cs01pm6eh81cd8",
         center: [coords.lng, coords.lat],
@@ -165,7 +162,19 @@
     map.on("load", function() {
         map.resize();
         map.setLayoutProperty("country-label", "text-field", ["get", "name_global"]);
-    });
+    }); {% endcomment %}
+
+    let map;
+    async function initMap() {
+        const {Map} = await google.maps.importLibrary("maps");
+        const {AdvancedMarkerElement} = await google.maps.importLibrary("marker");
+        map = new Map(document.getElementById("gmap"), {
+            center: {lat: -34.397, lng: 150.644},
+            zoom: 8,
+        });
+    }
+    initMap();
+    // TODO: Why isn't it working...
 
     // Default Marker
     const defaultMarker = new mapboxgl.Marker().setLngLat([coords.lng, coords.lat]).addTo(map);
@@ -241,10 +250,7 @@
                 coords.lng = response.x;
                 response = encode(coords.lat, coords.lng)[0];
                 setMapcodeData(mapcode.context, mapcode.mapcode, territory);
-                map.flyTo({
-                    center: [coords.lng, coords.lat],
-                    essential: true
-                });
+                moveMap(coords.lat, coords.lng);
             }
         }
     }
@@ -297,7 +303,7 @@
         window.location.href = googleMapsLink;
     });
 
-    map.on("click", (e) => {
+    {% comment %} map.on("click", (e) => {
         const newCoords = e.lngLat;
         console.log(newCoords);
         console.log("New coordinates: ", newCoords);
@@ -306,7 +312,7 @@
 
         // Get mapcode from new Coords
         ajaxGetMapcodeFromCoords(newCoords.lat, newCoords.lng);
-    });
+    }); {% endcomment %}
 
     const copyBtn = document.getElementById("copyBtn");
     copyBtn.addEventListener("click", (e) => {
