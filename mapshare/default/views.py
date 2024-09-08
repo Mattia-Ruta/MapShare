@@ -1,72 +1,125 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponseNotFound
 from django.conf import settings
-from mapshare.functions import getCountryCode3, isAValidMapcode
+from mapshare.functions import getCountries2, getCountryCode3, isAValidMapcode
 from ipware import get_client_ip
 import mapcode as mc
 import reverse_geocoder as rg
 import json
 import ipdata
-import math
 import pycountry
-import googlemaps
+import math
+import flag
 
 
 def index(request, mapcode = False, context = False):
     msg = ""
+    error = ""
     initialZoom = 10
     isValidMapcode = isAValidMapcode(context, mapcode)
+    if context == "AAA":
+        context = False
     territory = context
     coords = False
+    countryFlag = False
+    
+    bigBenCoords = {"lat": 51.5006785719964, "lng": -0.12454569}
+    bigBenContext = "GBR"
+    bigBenMapcode = "JJ.66"
+    bigBenCountryFlag = "🇬🇧"
+    bigBenTerritory = "England, United Kingdom"
     
     client_ip, is_routable = get_client_ip(request)
     if client_ip == "127.0.0.1": client_ip = "31.94.18.51"
     ipdata.api_key = settings.IPDATA_API_KEY
     lookupData = ipdata.lookup(client_ip)
-    if settings.DEBUG:
-        print(f"Lookup Data: {lookupData}")
 
-    if mapcode and context and isValidMapcode:
-        coords = mc.decode(mapcode, context)
-    elif mapcode and context and not isValidMapcode:
-        msg = f"{context} {mapcode} is an invalid mapcode."
-        coords = False
-        context = ""
-        mapcode = ""
-    elif mapcode and not context:
-        context = getCountryCode3(lookupData.get("country_code", "GB"))
-        mapcode = mc.encode(lookupData["latitude"], lookupData["longitude"])[0][0]
-        if mc.isvalid(f"{context} {mapcode}"):
-            coords = (lookupData.get("latitude", 51.5006785719964), lookupData.get("longitude", -0.12454569))
+    # Fresh Request
+    if not mapcode and not context:
+        if lookupData:
+            print("Fresh request, generating mapcode from general location/lookup")
+            coords = {"lat": lookupData["latitude"], "lng": lookupData["longitude"]}
+            context = getCountryCode3(lookupData["country_code"])
+            countryFlag = lookupData["emoji_flag"]
+            msg = "Mapcode generated from your general area"
         else:
-            msg = f"""
-                We need a context for the mapcode {mapcode} or it is an invalid code.
-
-                Try again with the ISO 3166 3-letter country code in the URL.
-                (For example: GBR for United Kingdom, ITA for Italy, etc)
-                More info at https://mapshare.xyz/about
-            """
-    else:
-        context = getCountryCode3(lookupData.get("country_code", "GB"))
-        coords = (lookupData.get("latitude", 51.5006785719964), lookupData.get("longitude", -0.12454569))
-        mapcode = mc.encode(coords[0], coords[1])[0][0]
-        isValidMapcode = True
-        initialZoom = 35
-
-    if coords:
-        response = rg.get((coords[0], coords[1]))
+            print("Could not determine general location--no location data")
+            coords = bigBenCoords
+            context = bigBenContext
+            mapcode = bigBenMapcode
+            countryFlag = bigBenCountryFlag
+            territory = bigBenTerritory
+            error = "Could not determine general location, here's Big Ben"
+    elif mapcode and not context:
+        print("Just mapcode given, checking if international context...")
+        if not math.isnan(mc.decode(mapcode, "AAA")[0]):
+            print(f"International Context for mapcode {mapcode}")
+            context = "AAA"
+            coords = mc.decode(mapcode, context)
+            coords = {"lat": coords[0], "lng": coords[1]}
+            betterMapcode = mc.encode(coords["lat"], coords["lng"])[0]
+            msg = f"The given mapcode is using the international context, try using mapcode {betterMapcode[1]} {betterMapcode[0]} instead!"
+            countryFlag = "🌐"
+            territory = "International"
+        else:
+            # Use context from request location
+            contextCheck = getCountryCode3(lookupData["country_code"])
+            if mc.isvalid(f"{contextCheck} {mapcode}"):
+                print(f"Not international, use context from locationData")
+                coords = mc.decode(mapcode, contextCheck)
+                coords = {"lat": coords[0], "lng": coords[1]}
+                context = contextCheck
+                countryFlag = lookupData["emoji_flag"]
+                response = rg.get((coords["lat"], coords["lng"]))
+                if response["admin1"]:
+                    countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
+                    territory = f"{response['admin1']}, {countryInfo.name}"
+                msg = f"Used context {context} for mapcode {mapcode}"
+            else:
+                print("Invalid mapcode")
+                error = f"{mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)"
+                coords = bigBenCoords
+                context = bigBenContext
+                mapcode = bigBenMapcode
+                countryFlag = bigBenCountryFlag
+                territory = bigBenTerritory
+    elif mapcode and context and isValidMapcode:
+        print(f"Mapcode {context} {mapcode} is valid")
+        coords = mc.decode(mapcode, context)
+        coords = {"lat": coords[0], "lng": coords[1]}
+        response = rg.get((coords["lat"], coords["lng"]))
         if response["admin1"]:
             countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
             territory = f"{response['admin1']}, {countryInfo.name}"
+            countryFlag = flag.flag(response["cc"])
 
-    # TODO: Add function to get territory from coordinates and add to AJAX view
+    altMapcodes = []
+    altMapcodeTerritory = ""
+    countryFlag = ""
+    mcResponse = mc.encode(coords["lat"], coords["lng"])
+    if mcResponse:
+        mcResponse.pop(0)
+        for altMapcode in mcResponse:
+            if altMapcode[1] == "AAA":
+                altMapcodeTerritory = "International"
+                countryFlag = "🌐"
+            else:
+                response = rg.get((coords["lat"], coords["lng"]))
+                if response["admin1"]:
+                    countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
+                    altMapcodeTerritory = f"{response['admin1']}, {countryInfo.name}"
+                    countryFlag = countryInfo.flag
+            altMapcodes.append({"context": altMapcode[1], "mapcode": altMapcode[0], "territory": altMapcodeTerritory, "countryFlag": countryFlag})
+
     vars = {
         "msg": msg,
+        "error": error,
         "debug" : settings.DEBUG,
-        "urlLat": coords[0] if coords else 51.500675,
-        "urlLng": coords[1] if coords else -0.124578,
+        "urlLat": coords["lat"] if coords else 51.500675,
+        "urlLng": coords["lng"] if coords else -0.124578,
         "context": context,
         "mapcode": mapcode,
+        "altMapcodes": altMapcodes,
         "initialZoom": initialZoom,
         "isValidMapcode": isValidMapcode,
         "maptilerAPIKey": settings.MAPTILER_API_KEY,
@@ -81,6 +134,8 @@ def index(request, mapcode = False, context = False):
         "lookupCity": lookupData.city,
         "lookupLat": lookupData.latitude,
         "lookupLng": lookupData.longitude,
+        "countries2": getCountries2(),
+        "countryFlag": countryFlag,
     }
     return render(request, "index.html", vars)
 
@@ -93,15 +148,33 @@ def getMapcodeAJAX(request):
             payload = {"success": "true", "mapcodes": []}
             for elem in response:
                 mapcode = elem[0]
-                territory = elem[1]
-                locationInfo = rg.get((body["lat"], body["lng"]))
-                country = pycountry.countries.get(alpha_2=locationInfo["cc"]).name
-                territory = f"{locationInfo['admin1']}, {country}"
+                context = elem[1]
 
-                payload["mapcodes"].append({"context": elem[1], "mapcode": elem[0], "territory": territory or elem[1]})
+                locationInfo = rg.get((body["lat"], body["lng"]))
+                if context == "AAA":
+                    territory = "International"
+                    countryFlag = "🌐"
+                else:
+                    country = pycountry.countries.get(alpha_2=locationInfo["cc"])
+                    territory = f"{locationInfo['admin1']}, {country.name}"
+                    countryFlag = country.flag
+
+                payload["mapcodes"].append({
+                    "context": context,
+                    "mapcode": mapcode,
+                    "territory": territory or elem[1],
+                    "countryFlag": countryFlag,
+                })
             return HttpResponse(json.dumps(payload), content_type="application/json")
         else:
             return HttpResponse(json.dumps({"success": False, "error": "Invalid coordinates"}), content_type="application/json")
+    else:
+        return HttpResponseForbidden()
+
+def getCountryFromCountry2AJAX(request):
+    if request.method =="POST":
+        body = json.loads(request.body)
+        print(body)
     else:
         return HttpResponseForbidden()
 

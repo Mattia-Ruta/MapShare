@@ -1,3 +1,4 @@
+// region Function Definitions
 function setURL(url) {
     window.history.pushState({}, "", url);
 }
@@ -5,30 +6,49 @@ function moveMap(map, lat, lng) {
     console.log(`Moving map to ${lat}, ${lng}`);
     map.panTo({lat: lat, lng: lng});
 }
-function setMapcodeData(context, mapcode, territory) {
+function setMapcodeData(context, mapcode, territory, altMapcodes = [], countryFlag = "") {
+    const territoryElem = document.getElementById("territory");
     const contextElem = document.getElementById("contextText");
     const mapcodeElem = document.getElementById("mapcodeText");
+    const altMapcodesDropdown = document.getElementById("altMapcodesDropdown");
+    const countryFlagElem = document.getElementById("countryFlag");
+    console.log(altMapcodes);
     contextElem.innerHTML = spinningGif;
     contextElem.innerHTML = spinningGif;
+    context = context.toUpperCase();
+    mapcode = mapcode.toUpperCase();
     if (context == "AAA") {
-        contextElem.innerHTML = "";
-
+        contextElem.innerHTML = "AAA";
         territoryElem.innerHTML = "International";
+        countryFlagElem.innerHTML = "🌐";
     } else {
-        contextElem.innerHTML = context.toUpperCase();
+        contextElem.innerHTML = context;
         territoryElem.innerHTML = territory;
+        countryFlagElem.innerHTML = countryFlag;
     }
     mapcodeElem.innerHTML = mapcode.toUpperCase();
-    setURL(`/${context.toUpperCase()}/${mapcode.toUpperCase()}`);
+    setURL(`/${context}/${mapcode}`);
+    for (const altMapcode of altMapcodes) {
+        if (typeof altMapcode.countryFlag == "undefined") altMapcode.countryFlag = "";
+        if (altMapcode.mapcode == mapcode) {
+            altMapcodesDropdown.innerHTML += `<li><a class="dropdown-item active" href="/${context}/${mapcode}" aria-current="true">${altMapcode.countryFlag}[${context} ${mapcode}] <small><i>${territory}</i></small></a></li>`;
+        } else {
+            altMapcodesDropdown.innerHTML += `<li><a class="dropdown-item" href="/${altMapcode.context}/${altMapcode.mapcode}">${altMapcode.countryFlag} [${altMapcode.context} ${altMapcode.mapcode}] <small><i>${altMapcode.territory}</i></small></a></li>`;
+        }
+    }
 }
 function clearMapcodeData() {
     const territoryElem = document.getElementById("territory");
     const contextElem = document.getElementById("contextText");
     const mapcodeElem = document.getElementById("mapcodeText");
+    const altMapcodesDropdown = document.getElementById("altMapcodesDropdown");
+    const countryFlagElem = document.getElementById("countryFlag");
     contextElem.innerHTML = spinningGif;
     contextElem.innerHTML = spinningGif;
     mapcodeElem.innerHTML = "Loading...";
     territoryElem.innerHTML = "Loading...";
+    altMapcodesDropdown.innerHTML = "";
+    countryFlagElem.innerHTML = "";
 }
 function bootstrapAlert(alertMsg, level = "danger") {
     const alertContainer = document.getElementById("alert-container");
@@ -36,6 +56,12 @@ function bootstrapAlert(alertMsg, level = "danger") {
     alertContainer.innerHTML = "";
     alertWrapper.innerHTML = `<div class="container"><div class="alert alert-${level} alert-dismissible" role="alert" style="margin-top: 4em;"><div>${alertMsg}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div></div>`;
     alertContainer.append(alertWrapper);
+    setTimeout(function() {
+        alertContainer.innerHTML = "";
+    }, 7000);
+}
+function clearBootstrapAlert() {
+    const alertContainer = document.getElementById("alert-container");
     setTimeout(function() {
         alertContainer.innerHTML = "";
     }, 7000);
@@ -56,6 +82,7 @@ async function ajaxGetMapcodeFromCoords(lat, lng) {
     .then(data => {
         if (data.success && data.mapcodes.length) {
             const mapcodes = data.mapcodes;
+            const newMapcode = mapcodes[0];
 
             // Add new marker
             currentMarker.map = null;
@@ -63,11 +90,14 @@ async function ajaxGetMapcodeFromCoords(lat, lng) {
             let newMarker = new AdvancedMarkerElement({
                 map: map,
                 position: newCoordsLatLngObj,
-                title: `${mapcodes[0].context} ${mapcodes[0].mapcode}`
+                title: `${newMapcode.context} ${newMapcode.mapcode}`
             });
             currentMarker = newMarker;
 
-            setMapcodeData(mapcodes[0].context, mapcodes[0].mapcode, mapcodes[0].territory);
+            setMapcodeData(newMapcode.context, newMapcode.mapcode, newMapcode.territory, mapcodes, newMapcode.countryFlag);
+            mapcode = newMapcode.mapcode;
+            context = newMapcode.context;
+            territory = newMapcode.territory;
             moveMap(map, lat, lng);
             if (debug) console.log("Mapcodes from Coords: ", mapcodes);
         } else {
@@ -82,7 +112,6 @@ async function ajaxGetMapcodeFromCoords(lat, lng) {
 }
 
 let map;
-
 async function initMap() {
     const { Map } = await google.maps.importLibrary("maps");
     const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
@@ -111,150 +140,76 @@ async function initMap() {
     map.addListener("click", (e) => {
         const newCoords = e.latLng;
         console.log("New coordinates: ", newCoords.lat(), newCoords.lng());
-        clearMapcodeData();
 
         // Get mapcode from new Coords
         ajaxGetMapcodeFromCoords(newCoords.lat(), newCoords.lng());
     });
-    const mapReadyEvent = new CustomEvent("mapReady", {detail: map});
-    document.dispatchEvent(mapReadyEvent);
+    return map;
 }
 
-initMap();
+// region Setup
+clearBootstrapAlert();
+setURL(`/${context}/${mapcode}`);
 
-document.addEventListener("mapReady", (e) => {
+initMap()
+.then((map) => {
     console.log("Map Loaded");
-    const map = e.detail;
-    if (pathArray.length == 0) {
-        isFreshRequest = true;
-        // Move map to general area of lookup data
-        response = encode(defaultCoords.lat, defaultCoords.lng);
-        if (response.length) {
-            console.log("Fresh request, generating mapcode from general location:");
-            bootstrapAlert("Mapcode generated from your general area", "info");
-            console.log("Mapcodes using initial lat/lng: ", response);
-            // First result is easiest
-            mapcode.context = response[0].territoryAlphaCode;
-            mapcode.mapcode = response[0].mapcode;
-            setMapcodeData(mapcode.context, mapcode.mapcode, `${lookupData.region}, ${lookupData.country}`);
-            moveMap(map, defaultCoords.lat, defaultCoords.lng);
-        } else {
-            // Unable to get a result, default to Big Ben
-            setMapcodeData("GBR", "JJ.66", "United Kingdom");
-            moveMap(map, 51.500675, -0.124578);
-        }
-    } else if (pathArray.length == 1) {
-        console.log("Just mapcode given, let's see if it's the International context");
-        mapcode.mapcode = pathArray[0];
 
-        response = decode(mapcode.mapcode, "AAA");
-        if (response) {
-            console.log(`International Context - ${mapcode.mapcode}`);
-            setMapcodeData("AAA", mapcode.mapcode, "International");
-            moveMap(map, response.y, response.x);
-            response = encode(response.y, response.x);
-            if (response.length > 1) {
-                // Easier mapcode here, let's suggest it
-                let easierMapcodeInfo = response[0];
-                let currentDomain = window.location.origin;
-                bootstrapAlert(`The given mapcode is using the international context, try using mapcode ${easierMapcodeInfo.fullmapcode} (<a href="${currentDomain}/${easierMapcodeInfo.territoryAlphaCode}/${easierMapcodeInfo.mapcode}">${currentDomain}/${easierMapcodeInfo.territoryAlphaCode}/${easierMapcodeInfo.mapcode}</a>)`, "info");
+    // region Top-Right Buttons
+    // Location Button
+    const locationBtn = document.getElementById("locationBtn");
+    locationBtn.addEventListener("click", (e) => {
+        if ("geolocation" in navigator) {
+            function locationSuccess(position) {
+                const coords = position.coords;
+                ajaxGetMapcodeFromCoords(coords.latitude, coords.longitude);
+                console.log(`New coordinates: ${coords.latitude}, ${coords.longitude}`);
             }
-        } else {
-            // Use context from request location
-            console.log(`Not international, use context from request general area (${lookupData.context})`);
-            response = decode(mapcode.mapcode, lookupData.context);
-            if (response) {
-                console.log(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`);
-                bootstrapAlert(`Used context ${lookupData.context} for mapcode ${mapcode.mapcode}`, "info");
-                ajaxGetMapcodeFromCoords(response.y, response.x);
-            } else {
-                // Invalid
-                console.error(`${mapcode.mapcode} is not a valid mapcode! Or at least needs context...`);
-                bootstrapAlert(`${mapcode.mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)`);
-                setMapcodeData("GBR", "JJ.66", "United Kingdom");
+            function locationError() {
+                bootstrapAlert("Sorry, position can't be found", "danger");
             }
-        }
-    } else if (pathArray.length == 2) {
-        mapcode.context = pathArray[0];
-        mapcode.mapcode = pathArray[1];
-        response = decode(mapcode.mapcode, mapcode.context);
-        if (response) {
-            mapcode.context = pathArray[0];
-            mapcode.mapcode = pathArray[1];
-            response = decode(mapcode.mapcode, mapcode.context);
-            if (response) {
-                console.log(`Mapcode ${mapcode.context} ${mapcode.mapcode} found`);
-                coords.lat = response.y;
-                coords.lng = response.x;
-                response = encode(coords.lat, coords.lng)[0];
-                setMapcodeData(mapcode.context, mapcode.mapcode, territory);
-                moveMap(map, coords.lat, coords.lng);
-            }
-        } else {
-            // Invalid
-            console.error(`${mapcode.context} ${mapcode.mapcode} is not a valid mapcode! Or at least needs context...`);
-            bootstrapAlert(`${mapcode.mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)`);
-            setMapcodeData("GBR", "JJ.66", "United Kingdom");
-        }
-    }
     
-});
-
-// Location Button
-const locationBtn = document.getElementById("locationBtn");
-locationBtn.addEventListener("click", (e) => {
-    if ("geolocation" in navigator) {
-        function locationSuccess(position) {
-            const coords = position.coords;
-            ajaxGetMapcodeFromCoords(coords.latitude, coords.longitude);
-            console.log(`New coordinates: ${coords.latitude}, ${coords.longitude}`);
+            const locationOptions = {
+                enableHighAccuracy: true,
+                maximumAge: 30000,
+                timeout: 27000
+            };
+            navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
+        } else {
+            bootstrapAlert("Location services not available");
         }
-        function locationError() {
-            bootstrapAlert("Sorry, position can't be found", "danger");
+    });
+    
+    // Share Button
+    const shareBtn = document.getElementById("shareBtn");
+    shareBtn.addEventListener("click", (e) => {
+        const contextElem = document.getElementById("contextText");
+        const mapcodeTextElem = document.getElementById("mapcodeText");
+        if (navigator.share) {
+            navigator.share({
+                title: `Mapshare - Exact location in ${territoryElem.innerHTML} (${contextElem.innerHTML} ${mapcodeTextElem.innerHTML})`,
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            bootstrapAlert("Share link copied to clipboard!", "info");
+            console.error("Share functionality not available in this browser");
         }
-
-        const locationOptions = {
-            enableHighAccuracy: true,
-            maximumAge: 30000,
-            timeout: 27000
-        };
-        navigator.geolocation.getCurrentPosition(locationSuccess, locationError, locationOptions);
-    } else {
-        bootstrapAlert("Location services not available");
-    }
-});
-
-// Share Button
-const shareBtn = document.getElementById("shareBtn");
-shareBtn.addEventListener("click", (e) => {
-    const contextElem = document.getElementById("contextText");
-    const mapcodeTextElem = document.getElementById("mapcodeText");
-    if (navigator.share) {
-        navigator.share({
-            title: `Mapshare - Exact location in ${territoryElem.innerHTML} (${contextElem.innerHTML} ${mapcodeTextElem.innerHTML})`,
-            url: window.location.href
-        });
-    } else {
-        navigator.clipboard.writeText(window.location.href);
-        bootstrapAlert("Share link copied to clipboard!", "info");
-        console.error("Share functionality not available in this browser");
-    }
-});
-
-// Google Maps Button
-const googleMapsBtn = document.getElementById("googleMapsBtn");
-googleMapsBtn.addEventListener("click", (e) => {
-    const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${currentMarker._lngLat.lat}%2C${currentMarker._lngLat.lng}`;
-    window.location.href = googleMapsLink;
-});
-
-// Copy Mapcode Functionality
-const copyBtn = document.getElementById("copyBtn");
-copyBtn.addEventListener("click", (e) => {
-    const contextElem = document.getElementById("contextText");
-    const mapcodeElem = document.getElementById("mapcodeText");
-    const mapcodeText = `${contextElem.innerHTML} ${mapcodeElem.innerHTML}`;
-
-    navigator.clipboard.writeText(mapcodeText);
-    bootstrapAlert(`"${mapcodeText}" copied to clipboard!`, "info");
+    });
+    
+    // Google Maps Button
+    const googleMapsBtn = document.getElementById("googleMapsBtn");
+    googleMapsBtn.addEventListener("click", (e) => {
+        console.log(currentMarker.position.lat)
+        const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${currentMarker.position.lat}%2C${currentMarker.position.lng}`;
+        window.location.href = googleMapsLink;
+    });
+    
+    // Copy Mapcode Functionality
+    const copyBtn = document.getElementById("copyBtn");
+    copyBtn.addEventListener("click", (e) => {
+        const mapcodeText = `${context} ${mapcode}`;
+        navigator.clipboard.writeText(mapcodeText);
+        bootstrapAlert(`"${mapcodeText}" copied to clipboard!`, "info");
+    });
 });
