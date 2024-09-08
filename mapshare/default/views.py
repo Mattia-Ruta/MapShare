@@ -60,7 +60,6 @@ def index(request, mapcode = False, context = False):
             territory = f"{response['admin1']}, {countryInfo.name}"
 
     # TODO: Add function to get territory from coordinates and add to AJAX view
-    # TODO: Make it so you don't have to have AAA as the context for international mapcodes
     vars = {
         "msg": msg,
         "debug" : settings.DEBUG,
