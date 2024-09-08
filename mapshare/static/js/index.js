@@ -146,6 +146,9 @@ async function initMap() {
     });
     return map;
 }
+async function loadPlaces() {
+    return await google.maps.importLibrary("places");
+}
 
 // region Setup
 clearBootstrapAlert();
@@ -212,4 +215,66 @@ initMap()
         navigator.clipboard.writeText(mapcodeText);
         bootstrapAlert(`"${mapcodeText}" copied to clipboard!`, "info");
     });
+    const mapsLoadedEvent = new CustomEvent("mapsLoaded", {detail: map});
+    document.dispatchEvent(mapsLoadedEvent);
 });
+
+// region Places
+document.addEventListener("mapsLoaded", (e) => {
+    const map = e.detail;
+    loadPlaces()
+    .then((places) =>  {
+        const placesService = new places.PlacesService(map);
+        const searchInput = document.getElementById("mapcodeSearch");
+        const countries3 = Object.values(countries);
+        searchInput.addEventListener("keyup", (e) => {
+            const value = e.target.value.toUpperCase();
+            if (value.length > 5) {
+                const response = decode(value);
+                if (response) {
+                    console.log(`Mapcode returned coordinates: ${response.x}, ${response.y}`);
+                    const parts = value.split(" ");
+                    const popover = new bootstrap.Popover(searchInput, {
+                        content: `Mapcode: <a href='/${parts[0]}/${parts[1]}'>${value}</a>`,
+                        html: true,
+                    });
+                    popover.show();
+                }
+            }
+        });
+
+        const centre = {lat: map.getCenter().lat(), lng: map.getCenter().lng()}
+        // 0.1 is around 10km
+        const searchBounds = {
+            north: centre.lat + 0.2,
+            south: centre.lat - 0.2,
+            east: centre.lng + 0.2,
+            west: centre.lng - 0.2,
+        }
+        const options = {
+            bounds: searchBounds,
+            fields: ["address_components", "geometry", "icon", "name"],
+            strictBounds: false,
+        };
+        console.log("Places Library Loaded");
+        console.log(map.getCenter().lng());
+
+        const autocomplete = new places.Autocomplete(searchInput, options);
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            searchInput.value = "";
+
+            if (!place.geometry || !place.geometry.location) {
+                bootstrapAlert("You have not selected a valid location");
+                return;
+            }
+
+            const newLocation = {lat: place.geometry.location.lat(), lng: place.geometry.location.lng()};
+            ajaxGetMapcodeFromCoords(newLocation.lat, newLocation.lng);
+        })
+    });
+});
+var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+  return new bootstrap.Popover(popoverTriggerEl);
+})

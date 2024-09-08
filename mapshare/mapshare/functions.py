@@ -262,7 +262,7 @@ def getCountryCode3(countryCode = "GB", language = "en"):
         'YE':'YEM',
         'ZM':'ZMB',
         'ZW':'ZWE'
-        }
+    }
     return countries.get(countryCode, "GBR")
 
 def getCountries2():

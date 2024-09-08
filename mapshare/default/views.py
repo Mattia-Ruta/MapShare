@@ -130,6 +130,7 @@ def index(request, mapcode = False, context = False):
         "maptilerAPIKey": settings.MAPTILER_API_KEY,
         "mapboxAPIKey": settings.MAPBOX_API_KEY,
         "googleMapsKey": settings.GOOGLEMAPS_API_KEY,
+        "googleMapsPlacesUrl": settings.GOOGLEMAPS_PLACES_URL,
         "territory": territory,
         "googlemapsAPIKey": settings.GOOGLEMAPS_API_KEY,
         "lookupCountry": lookupData.country_name,
