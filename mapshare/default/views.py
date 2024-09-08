@@ -39,8 +39,15 @@ def index(request, mapcode = False, context = False):
         if lookupData:
             print("Fresh request, generating mapcode from general location/lookup")
             coords = {"lat": lookupData["latitude"], "lng": lookupData["longitude"]}
+            response = mc.encode(coords["lat"], coords["lng"])
+            mapcode = response[0][0]
+            context = response[0][1]
+            response = rg.get((coords["lat"], coords["lng"]))
+            if response["admin1"]:
+                countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
+                territory = f"{response['admin1']}, {countryInfo.name}"
+                countryFlag = countryInfo.flag
             context = getCountryCode3(lookupData["country_code"])
-            countryFlag = lookupData["emoji_flag"]
             msg = "Mapcode generated from your general area"
         else:
             print("Could not determine general location--no location data")
@@ -95,21 +102,19 @@ def index(request, mapcode = False, context = False):
 
     altMapcodes = []
     altMapcodeTerritory = ""
-    countryFlag = ""
     mcResponse = mc.encode(coords["lat"], coords["lng"])
     if mcResponse:
-        mcResponse.pop(0)
         for altMapcode in mcResponse:
             if altMapcode[1] == "AAA":
                 altMapcodeTerritory = "International"
-                countryFlag = "🌐"
+                thisCountryFlag = "🌐"
             else:
                 response = rg.get((coords["lat"], coords["lng"]))
                 if response["admin1"]:
                     countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
                     altMapcodeTerritory = f"{response['admin1']}, {countryInfo.name}"
-                    countryFlag = countryInfo.flag
-            altMapcodes.append({"context": altMapcode[1], "mapcode": altMapcode[0], "territory": altMapcodeTerritory, "countryFlag": countryFlag})
+                    thisCountryFlag = countryInfo.flag
+            altMapcodes.append({"context": altMapcode[1], "mapcode": altMapcode[0], "territory": altMapcodeTerritory, "countryFlag": thisCountryFlag})
 
     vars = {
         "msg": msg,
