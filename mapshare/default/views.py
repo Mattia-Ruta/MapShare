@@ -3,6 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.conf import settings
 from mapshare.functions import getCountries2, getCountryCode3, isAValidMapcode
 from ipware import get_client_ip
+from django.views.decorators.cache import never_cache
 import mapcode as mc
 import reverse_geocoder as rg
 import json
@@ -11,7 +12,7 @@ import pycountry
 import math
 import flag
 
-
+@never_cache
 def index(request, mapcode = False, context = False):
     msg = ""
     error = ""

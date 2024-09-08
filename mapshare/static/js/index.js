@@ -227,6 +227,7 @@ document.addEventListener("mapsLoaded", (e) => {
         const placesService = new places.PlacesService(map);
         const searchInput = document.getElementById("mapcodeSearch");
         const countries3 = Object.values(countries);
+        console.log("Places Library Loaded");
         searchInput.addEventListener("keyup", (e) => {
             const value = e.target.value.toUpperCase();
             if (value.length > 5) {
@@ -256,8 +257,6 @@ document.addEventListener("mapsLoaded", (e) => {
             fields: ["address_components", "geometry", "icon", "name"],
             strictBounds: false,
         };
-        console.log("Places Library Loaded");
-        console.log(map.getCenter().lng());
 
         const autocomplete = new places.Autocomplete(searchInput, options);
         autocomplete.addListener("place_changed", () => {
