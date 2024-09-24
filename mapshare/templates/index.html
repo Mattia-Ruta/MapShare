@@ -8,7 +8,7 @@
     <div class="card-body">
         <div class="row justify-content-center">
             <div class="col-10">
-                <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg m-1">
+                <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg mb-1">
                     <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
                     <h3 id="contextText" class="text-white inline">
                         {{ context }}
@@ -28,7 +28,7 @@
             </div>
         </div>
             <!-- Top-Right Buttons -->
-        <div id="topRightButtonsContainer" class="container-sm mt-3 me-1 gap-5">
+        <div id="topRightButtonsContainer" class="container-sm mt-1 gap-5">
             <div class="row justify-content-center">
                 <div class="col-10">
                     <button id="locationBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to get mapcode for your current location"><i class="fa-solid fa-location-arrow"></i></button>
@@ -43,7 +43,7 @@
     <!-- Territory Area -->
     <div class="card-footer text-muted">
             <div class="dropup">
-                <button id="territoryCnt" class="btn btn-outline-info btn-md m-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button id="territoryCnt" class="btn btn-outline-info btn-md dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
                 </button>
                 <!-- Alternative Mapcodes Dropdown -->
@@ -59,7 +59,7 @@
             </div>
     </div>
     <!-- Top middle card displaying "Mapshare" -->
-    <div class="container-sm mt-3">
+    <div class="container-sm mb-1">
         <div class="row justify-content-center">
             <div class="col-12">
                 <div id="topMiddleCard" class="card text-center greybg">
@@ -70,17 +70,14 @@
                         <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
                         <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
                     </div>
-                    <div class="card-footer text-white">
-                        <small><i>&copy; 2023-2024 Mattia Ruta</i></small>
+                    <div class="card-footer text-white-50">
+                        <small><i style="font-size: 0.825em;">&copy; 2023-2024 Mattia Ruta</i></small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
-
 
 <!-- Alert -->
 <div id="alert-container" class="container-med">
