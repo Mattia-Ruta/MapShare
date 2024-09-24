@@ -4,61 +4,88 @@
 {% block content%}
 
 <!-- Mapcode Info Box class="fixed-bottom" -->
-<div class="card fixed-bottom" style="bottom: 1%; left: 1%; width: 92%; background-color: #444444; z-index: 999;">
+<div id="bottom-card" class="card fixed-bottom text-center">
     <div class="card-body">
-        <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg m-1" style="display: inline;">
-            <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
-            <h3 id="contextText" style="display: inline; color: white;">
-                {{ context }}
-            </h3>&nbsp
-            <h2 id="mapcodeText" style="display: inline; color: white" title="This code represents this exact location!">
-                {{ mapcode }}
-            </h2>&nbsp
-            <i class="fa-solid fa-copy"></i>
-        </button>
-        <div class="form-group container-md" style="display: inline-block; width: 80%;">
-            <input id="mapcodeSearch" type="text" class="form-control" placeholder="Enter Address or Mapcode">
+        <div class="row justify-content-center">
+            <div class="col-10">
+                <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg m-1">
+                    <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
+                    <h3 id="contextText" class="text-white inline">
+                        {{ context }}
+                    </h3>&nbsp
+                    <h2 id="mapcodeText" class="text-white inline" title="This code represents this exact location!">
+                        {{ mapcode }}
+                    </h2>&nbsp
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+            </div>
+        </div>
+        <div id="mapcodeSearchContainer" class="form-group container-md">
+            <div class="row justify-content-center">
+                <div class="col-10">
+                    <input id="mapcodeSearch" type="text" class="form-control" placeholder="Enter Address or Mapcode">
+                </div>
+            </div>
+        </div>
+            <!-- Top-Right Buttons -->
+        <div id="topRightButtonsContainer" class="container-sm mt-3 me-1 gap-5">
+            <div class="row justify-content-center">
+                <div class="col-10">
+                    <button id="locationBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to get mapcode for your current location"><i class="fa-solid fa-location-arrow"></i></button>
+                    <button id="shareBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to share!"><i class="fa-solid fa-share-nodes"></i></button>
+                    <button id="googleMapsBtn" type="button" class="btn btn-info btn-lg" title="Open in Google Maps">
+                        <img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}">
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Territory Area -->
     <div class="card-footer text-muted">
             <div class="dropup">
-                <button class="btn btn-outline-info btn-md m-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="territoryCnt">
+                <button id="territoryCnt" class="btn btn-outline-info btn-md m-1 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
                 </button>
                 <!-- Alternative Mapcodes Dropdown -->
                 <ul id="altMapcodesDropdown" class="dropdown-menu">
                     {% for altMapcode in altMapcodes %}
-                        <li><a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>{{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small></a></li>
+                        <li>
+                            <a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>
+                                {{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small>
+                            </a>
+                        </li>
                     {% endfor %}
                 </ul>
             </div>
     </div>
+    <!-- Top middle card displaying "Mapshare" -->
+    <div class="container-sm mt-3">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div id="topMiddleCard" class="card text-center greybg">
+                    <div class="card-body text-white">
+                        <strong><h3 class="align-middle inline">Mapshare</h3></strong>&nbsp;
+                        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
+                        <a class="align-middle inline" href="{% url 'app:about' %}">About</a>&nbsp;
+                        <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
+                        <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
+                    </div>
+                    <div class="card-footer text-white">
+                        <small><i>&copy; 2023-2024 Mattia Ruta</i></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Top-Right Buttons -->
-<div class="container-sm mt-5 me-5 gap-5" style="position: absolute; right: 2%;">
-    <div class="row justify-content-end">
-        <div class="col-1">
-            <button id="locationBtn" type="button" class="btn btn-info btn-lg" title="Click to get mapcode for your current location" style="padding-right: 1.2em; padding-left: 1.2em;"><i class="fa-solid fa-location-arrow"></i></button>
-        </div>
-    </div>
-    <div class="row justify-content-end mt-1">
-        <div class="col-1">
-            <button id="shareBtn" type="button" class="btn btn-info btn-lg" title="Click to share!" style="padding-right: 1.2em; padding-left: 1.2em;"><i class="fa-solid fa-share-nodes"></i></button>
-        </div>
-    </div>
-    <div class="row justify-content-end mt-1">
-        <div class="col-1">
-            <button id="googleMapsBtn" type="button" class="btn btn-info btn-lg" title="Open in Google Maps"><img src="{% static 'img/google-maps.png' %}" style="max-width: 1.6em; height: auto;"></button>
-        </div>
-    </div>
-</div>
+
+
 
 <!-- Alert -->
 <div id="alert-container" class="container-med">
     {% if msg %}
-        <div class="container"><div class="alert alert-info alert-dismissible" role="alert" style="margin-top: 4em;"><div>{{ msg }}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div></div>
+        <div class="container"><div class="alert alert-info alert-dismissible mt-2" role="alert" style=""><div>{{ msg }}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div></div>
     {% elif error %}
         <div class="container"><div class="alert alert-danger alert-dismissible" role="alert" style="margin-top: 4em;"><div>{{ error }}</div><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div></div>
     {% endif %}

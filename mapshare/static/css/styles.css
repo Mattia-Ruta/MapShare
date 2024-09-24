@@ -1,3 +1,5 @@
+
+/* Main Components */
 #map {
     position: absolute;
     top: 0;
@@ -7,4 +9,48 @@
     margin: 0;
     padding: 0;
     z-index: -5;
+}
+
+#bottom-card {
+    margin: 1%;
+    background-color: #444444;
+    z-index: 999;
+}
+
+.greybg {
+    background-color: #444444;
+}
+
+/* Bottom Card */
+#copyBtn {
+    display: inline;
+}
+
+/* Top Right Buttons */
+
+.topRightButton {
+    padding-right: 1.2em;
+    padding-left: 1.2em;
+}
+#googleMapsBtn {
+    width: 3.5em;
+    height: 2.5em;
+}
+#googleMapsLogo {
+    max-width: 2em;
+    height: 1.5em;
+}
+
+#mapcodeSearchContainer {
+    display: inline-block;
+    width: 80%;
+}
+
+/* General */
+.inline {
+    display: inline;
+}
+
+nav {
+    background-color: #444444;
 }

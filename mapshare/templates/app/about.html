@@ -1,0 +1,98 @@
+{% extends "app/layout.html" %}
+{% load static %}
+{% block title %}Mapshare | About {% endblock %}
+{% block content%}
+<div class="container mt-5">
+    <h1 class="mb-4">About Mapshare</h1>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">What is Mapshare?</h2>
+            <p class="card-text">
+                Mapshare is a web application that allows you to easily share and find locations using a revolutionary system called Mapcodes.
+                My goal is to make location sharing easier and accessible to everyone.
+            </p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">What are Mapcodes?</h2>
+            <p class="card-text">
+                Mapcodes are short, easy-to-remember codes that represent specific locations on Earth.
+                Think of them as a more user-friendly version of latitude and longitude coordinates.
+                Some key features of mapcodes:
+            </p>
+            <ul>
+                <li>Typically 4-7 characters long</li>
+                <li>They can represent any location on Earth with high precision (around 5m²)</li>
+                <li>Easy to read, say, and remember (think of it like a UK postcode but for the whole world)</li>
+                <li>They Work internationally and are language-independent. Mapcodes are the same no matter where it is in the world!</li>
+            </ul>
+            <p class="card-text">
+                For example, instead of saying "51.5007° N, 0.1246° W" for Big Ben in London, you could just use the Mapcode "JJ.66".
+                Isn't that a lot easier?
+            </p>
+            <h3>Territories and Mapcodes</h3>
+            <p class="card-text">
+                Mapcodes can be used with or without territory codes.
+                When a territory code is used, it allows for shorter mapcodes within that specific region.
+                For example:
+            </p>
+            <ul>
+                <li>The international mapcode for Big Ben is "GCPVJ.QGQV"</li>
+                <li>But within the GBR territory, it can simply be "JJ.66"</li>
+            </ul>
+            <p class="card-text">
+                This system allows for easier local use, but be careful when sharing across different territories!
+                Mapshare automatically provides the most relevant mapcode based on the location, but also offers alternative options when available.
+            </p>
+            <p>More info about mapcodes <a href="https://www.mapcode.com/">here</a> on the official site.</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">How Mapshare Works</h2>
+            <ol>
+                <li><strong>Find a Location:</strong> Use our map interface to pinpoint any location in the world.</li>
+                <li><strong>Get the Mapcode:</strong> Once you've selected a location, Mapshare will generate the corresponding Mapcode.</li>
+                <li><strong>Share:</strong> Copy the Mapcode and share it with others via any messaging app.</li>
+                <li><strong>Locate:</strong> When someone receives a Mapcode, they can enter it on Mapshare to see the exact location on the map.</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Why Use Mapshare?</h2>
+            <ul>
+                <li><strong>Simplicity:</strong> Mapcodes are much easier to communicate than long GPS coordinates.</li>
+                <li><strong>Accuracy:</strong> Pinpoint specific locations, even in areas without formal addressing systems.</li>
+                <li><strong>Universal:</strong> Works anywhere in the world, making it great for international use.</li>
+                <li><strong>Privacy:</strong> Mapcodes don't contain any inherent information about the location, enhancing privacy.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Get Started</h2>
+            <p class="card-text">Ready to try Mapshare? Head back to our <a href="/">homepage</a> and start exploring the world through Mapcodes!</p>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">About Me</h2>
+            <p class="card-text">
+                I'm Mattia, the developer behind Mapshare.
+                I'm a software developer from Italy who lives in the UK and I've created this website to help people share locations easily and accurately.
+                If you have any questions or feedback, please feel free to contact me at <a href="mailto:mapshare@mruta.uk">mapshare@mruta.uk</a>.
+                If you have any concerns about the privacy of your data, please check out our <a href="{% url 'app:privacy-policy' %}">privacy policy</a>.
+            </p>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

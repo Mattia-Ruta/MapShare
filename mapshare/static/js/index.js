@@ -123,9 +123,16 @@ async function initMap() {
         center: defaultCoordsLatLngObj,
         mapId: "map",
         zoomControl: true,
+        zoomControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_CENTER
+        },
         streetViewControl: false,
         mapTypeControl: true,
-        rotateControl: true,
+        mapTypeControlOptions: {
+            position: google.maps.ControlPosition.LEFT_TOP,
+            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+        },
+        fullscreenControl: false,
         mapTypeId: "hybrid"
     });
 
@@ -273,6 +280,7 @@ document.addEventListener("mapsLoaded", (e) => {
         })
     });
 });
+
 var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
 var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
   return new bootstrap.Popover(popoverTriggerEl);
