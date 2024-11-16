@@ -214,6 +214,14 @@ initMap()
         const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${currentMarker.position.lat}%2C${currentMarker.position.lng}`;
         window.location.href = googleMapsLink;
     });
+
+    // Citymapper Button
+    const citymapperBtn = document.getElementById("citymapperBtn");
+    citymapperBtn.addEventListener("click", (e) => {
+        console.log(e);
+        const citymapperLink = `https://citymapper.com/directions?endcoord=${currentMarker.position.lat}%2C${currentMarker.position.lng}`;
+        window.location.href = citymapperLink;
+    });
     
     // Copy Mapcode Functionality
     const copyBtn = document.getElementById("copyBtn");

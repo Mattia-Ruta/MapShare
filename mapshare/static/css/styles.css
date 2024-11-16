@@ -26,19 +26,30 @@
     display: inline;
 }
 
-/* Top Right Buttons */
+/* Function Buttons */
 
 .topRightButton {
     padding-right: 1.2em;
     padding-left: 1.2em;
+    margin: 0.1em;
 }
 #googleMapsBtn {
     width: 3.5em;
     height: 2.5em;
+    padding: inherit;
 }
 #googleMapsLogo {
-    max-width: 2em;
-    height: 1.5em;
+    width: 2em;
+    height: auto;
+}
+#citymapperBtn {
+    width: 3.5em;
+    height: 2.5em;
+    padding: inherit;
+}
+#citymapperLogo {
+    width: 2em;
+    height: auto;
 }
 
 #mapcodeSearchContainer {
