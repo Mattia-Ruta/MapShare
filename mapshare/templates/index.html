@@ -8,78 +8,36 @@
     <div class="card-body">
         <div class="row justify-content-center">
             <div class="col-10">
-                <button id="copyBtn" type="button" class="btn btn-outline-info btn-lg mb-1">
-                    <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
-                    <h3 id="contextText" class="text-white inline">
-                        {{ context }}
-                    </h3>&nbsp
-                    <h2 id="mapcodeText" class="text-white inline" title="This code represents this exact location!">
-                        {{ mapcode }}
-                    </h2>&nbsp
-                    <i class="fa-solid fa-copy"></i>
-                </button>
-            </div>
-        </div>
-        <div id="mapcodeSearchContainer" class="form-group container-md">
-            <div class="row justify-content-center">
-                <div class="col-10">
-                    <input id="mapcodeSearch" type="text" class="form-control" placeholder="Enter Address or Mapcode">
-                </div>
-            </div>
-        </div>
-            <!-- Top-Right Buttons -->
-        <div id="topRightButtonsContainer" class="container-sm mt-1 gap-5">
-            <div class="row justify-content-center">
-                <div class="col-10">
-                    <button id="locationBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to get mapcode for your current location"><i class="fa-solid fa-location-arrow"></i></button>
-                    <button id="shareBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to share!"><i class="fa-solid fa-share-nodes"></i></button>
-                    <button id="googleMapsBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Open in Google Maps">
-                        <img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}">
-                    </button>
-                    <button id="citymapperBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Open in Citymapper">
-                        <img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}">
-                    </button>
-                </div>
+
             </div>
         </div>
     </div>
-    <!-- Territory Area -->
-    <div class="card-footer text-muted">
-            <div class="dropup">
-                <button id="territoryCnt" class="btn btn-outline-info btn-md dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
-                </button>
-                <!-- Alternative Mapcodes Dropdown -->
-                <ul id="altMapcodesDropdown" class="dropdown-menu">
-                    {% for altMapcode in altMapcodes %}
-                        <li>
-                            <a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>
-                                {{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small>
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+
+    <div class="dropup">
+        <button id="territoryCnt" class="btn btn-outline-info btn-md dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
+        </button>
+        <!-- Alternative Mapcodes Dropdown -->
+        <ul id="altMapcodesDropdown" class="dropdown-menu">
+            {% for altMapcode in altMapcodes %}
+                <li>
+                    <a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>
+                        {{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
-    <!-- Top middle card displaying "Mapshare" -->
-    <div class="container-sm mb-1">
-        <div class="row justify-content-center">
-            <div class="col-12">
-                <div id="topMiddleCard" class="card text-center greybg">
-                    <div class="card-body text-white">
-                        <strong><h3 class="align-middle inline">Mapshare</h3></strong>&nbsp;
-                        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
-                        <a class="align-middle inline" href="{% url 'app:about' %}">About</a>&nbsp;
-                        <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
-                        <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
-                        <a class="align-middle inline" href="#"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy me a coffee', '#525252', 'K3K5PRX62');kofiwidget2.draw();</script> </a>
-                    </div>
-                    <div class="card-footer text-white-50">
-                        <small><i style="font-size: 0.825em;">&copy; 2023-2024 Mattia Ruta</i></small>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="card-body text-white">
+        <strong><h3 class="align-middle inline">Mapshare</h3></strong>&nbsp;
+        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:about' %}">About</a>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
+        <a class="align-middle inline" href="#"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy me a coffee', '#525252', 'K3K5PRX62');kofiwidget2.draw();</script> </a>
+    </div>
+    <div class="card-footer text-white-50">
+        <small><i style="font-size: 0.825em;">&copy; 2023-2024 Mattia Ruta</i></small>
     </div>
 </div>
 
@@ -92,10 +50,53 @@
     {% endif %}
 </div>
 
-<!-- Map -->
-<div id="map" style="position: absolute; top: 0; bottom: 0; height: 100%; width: 100%; margin: 0; padding: 0; z-index: -5;">
-
+<div id="middleBottomContainer" class="container-fluid">
+    <!-- Search Bar -->
+    <div class="row m-2">
+        <div class="col-12 col-md">
+            <div id="mapcodeSearchContainer">
+                <input id="mapcodeSearch" type="text" placeholder="Enter Address or Mapcode">
+            </div>
+        </div>
+        <div id="mapcodeContainer" class="col-12">
+            <button id="copyBtn" type="button" class="btn btn-info btn-sm">
+                <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
+                <h3 id="contextText" class="text-white inline">
+                    {{ context }}
+                </h3>
+                <h2 id="mapcodeText" class="text-white inline" title="This code represents this exact location!">
+                    {{ mapcode }}
+                </h2>
+                <i class="fa-solid fa-copy"></i>
+            </button>
+        </div>
+        <div class="col-6 m-2">
+            <div>
+                <button id="locationBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-location-arrow"></i></button>
+                <button id="shareBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-share-nodes"></i></button>
+                <button id="googleMapsBtn" type="button" class="btn btn-info btn-sm"><img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}"></button>
+                <button id="citymapperBtn" type="button" class="btn btn-info btn-sm"><img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}"></button>
+            </div>
+        </div>
+        {% comment %} <div class="col-4 m-2">
+            <!-- Top-Right Buttons -->
+            <div id="topRightButtonsContainer">
+                <div>
+                    <button id="locationBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to get mapcode for your current location"><i class="fa-solid fa-location-arrow"></i></button>
+                    <button id="shareBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Click to share!"><i class="fa-solid fa-share-nodes"></i></button>
+                    <button id="googleMapsBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Open in Google Maps">
+                        <img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}">
+                    </button>
+                    <button id="citymapperBtn" type="button" class="btn btn-info btn-lg topRightButton" title="Open in Citymapper">
+                        <img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}">
+                    </button>
+                </div>
+            </div>
+        </div> {% endcomment %}
+    </div>
 </div>
+
+<div id="mapContainer"><div id="map"></div></div>
 
 <script type="text/javascript">
     const msg = "{{ msg }}";

@@ -4,15 +4,16 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    height: 100%;
+    height: 65%;
     width: 100%;
     margin: 0;
     padding: 0;
     z-index: -5;
 }
 
+/* Bottom Card */
 #bottom-card {
-    margin: 1%;
+    height: 35%;
     background-color: #444444;
     z-index: 999;
 }
@@ -21,18 +22,34 @@
     background-color: #444444;
 }
 
-/* Bottom Card */
-#copyBtn {
-    display: inline;
-}
+/* #middleBottomContainer {
+    text-align: center;
+    z-index: 1000;
+} */
+
+/* #copyBtn {
+    display: inline-block;
+    z-index: 1000;
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    text-align: center;
+} */
+
+/* #topRightButtonsContainer {
+    position: absolute;
+    margin: 1%;
+    bottom: 5%;
+    right: 0;
+    z-index: 1000;
+} */
 
 /* Function Buttons */
-
-.topRightButton {
+/* .topRightButton {
     padding-right: 1.2em;
     padding-left: 1.2em;
     margin: 0.1em;
-}
+} */
 #googleMapsBtn {
     width: 3.5em;
     height: 2.5em;
@@ -52,9 +69,23 @@
     height: auto;
 }
 
-#mapcodeSearchContainer {
-    display: inline-block;
-    width: 80%;
+@media (max-width: 768px) {
+    #mapcodeSearch {
+        width: 100%;
+    }
+    #mapcodeContainer {
+        width: 100%;
+    }
+}
+
+#mapcodeSearch {
+    padding: 1%;
+    border-radius: 10px;
+}
+
+#mapcodeContainer {
+    padding: 1%;
+    border-radius: 10px;
 }
 
 /* General */
