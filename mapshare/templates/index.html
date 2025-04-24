@@ -3,44 +3,6 @@
 {% block title %}Mapshare | Location in {{ territory }} {% endblock %}
 {% block content%}
 
-<!-- Mapcode Info Box class="fixed-bottom" -->
-<div id="bottom-card" class="card fixed-bottom text-center">
-    <div class="card-body">
-        <div class="row justify-content-center">
-            <div class="col-10">
-
-            </div>
-        </div>
-    </div>
-
-    <div class="dropup">
-        <button id="territoryCnt" class="btn btn-outline-info btn-md dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
-        </button>
-        <!-- Alternative Mapcodes Dropdown -->
-        <ul id="altMapcodesDropdown" class="dropdown-menu">
-            {% for altMapcode in altMapcodes %}
-                <li>
-                    <a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>
-                        {{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small>
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div class="card-body text-white">
-        <strong><h3 class="align-middle inline">Mapshare</h3></strong>&nbsp;
-        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
-        <a class="align-middle inline" href="{% url 'app:about' %}">About</a>&nbsp;
-        <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
-        <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
-        <a class="align-middle inline" href="#"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy me a coffee', '#525252', 'K3K5PRX62');kofiwidget2.draw();</script> </a>
-    </div>
-    <div class="card-footer text-white-50">
-        <small><i style="font-size: 0.825em;">&copy; 2023-2024 Mattia Ruta</i></small>
-    </div>
-</div>
-
 <!-- Alert -->
 <div id="alert-container" class="container-med">
     {% if msg %}
@@ -50,15 +12,14 @@
     {% endif %}
 </div>
 
-<div id="middleBottomContainer" class="container-fluid">
-    <!-- Search Bar -->
-    <div class="row m-2">
-        <div class="col-12 col-md">
-            <div id="mapcodeSearchContainer">
-                <input id="mapcodeSearch" type="text" placeholder="Enter Address or Mapcode">
+<div class="card greybg m-2" style="max-width: 25rem;">
+    <div class="card-body">
+        <div class="card-text">
+            <div id="mapcodeSearchContainer" class="mb-2">
+                <input id="mapcodeSearch" type="text" placeholder="Enter Address or Mapcode" class="form-control">
             </div>
         </div>
-        <div id="mapcodeContainer" class="col-12">
+        <div id="mapcodeContainer">
             <button id="copyBtn" type="button" class="btn btn-info btn-sm">
                 <span id="countryFlag">{% if countryFlag %}{{ countryFlag }}{% endif %}</span>
                 <h3 id="contextText" class="text-white inline">
@@ -70,7 +31,8 @@
                 <i class="fa-solid fa-copy"></i>
             </button>
         </div>
-        <div class="col-6 m-2">
+
+        <div id="buttonsContainer">
             <div>
                 <button id="locationBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-location-arrow"></i></button>
                 <button id="shareBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-share-nodes"></i></button>
@@ -78,6 +40,13 @@
                 <button id="citymapperBtn" type="button" class="btn btn-info btn-sm"><img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}"></button>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="middleBottomContainer" class="container-fluid">
+    <!-- Search Bar -->
+    <div class="row m-2">
+
         {% comment %} <div class="col-4 m-2">
             <!-- Top-Right Buttons -->
             <div id="topRightButtonsContainer">
@@ -93,6 +62,37 @@
                 </div>
             </div>
         </div> {% endcomment %}
+    </div>
+</div>
+
+<div id="territoryContainer" class="dropup">
+    <button id="territoryCnt" class="btn btn-info btn-md dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-mountain-sun"></i> Territory: <strong id="territory">{{ territory }}</strong>
+    </button>
+    <!-- Alternative Mapcodes Dropdown -->
+    <ul id="altMapcodesDropdown" class="dropdown-menu">
+        {% for altMapcode in altMapcodes %}
+            <li>
+                <a class="dropdown-item{% if altMapcode.mapcode == mapcode %} active{% endif %}" href="/{{ altMapcode.context}}/{{ altMapcode.mapcode}}"{% if altMapcode.mapcode == mapcode %} aria-current="true"{% endif %}>
+                    {{ altMapcode.countryFlag }} [{{ altMapcode.context }} {{ altMapcode.mapcode }}] <small><i>{{ altMapcode.territory }}</i></small>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Mapcode Info Box class="fixed-bottom" -->
+<div id="bottom-card" class="card fixed-bottom text-center">
+    <div class="card-footer text-white-50">
+        <strong><h3 class="align-middle inline">Mapshare</h3></strong>&nbsp;
+        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:about' %}">About</a>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:privacy-policy' %}">Privacy Policy</a>&nbsp;
+        <a class="align-middle inline" href="{% url 'app:contact' %}">Contact</a>&nbsp;
+        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
+        <a class="align-middle inline" href="#"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Buy me a coffee', '#525252', 'K3K5PRX62');kofiwidget2.draw();</script> </a>
+        <div class="inline" style="border-left:1px solid white;height:2em;"></div>&nbsp;
+        <small><i style="font-size: 0.825em;">&copy; 2023-2024 Mattia Ruta</i></small>
     </div>
 </div>
 

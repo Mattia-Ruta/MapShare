@@ -4,52 +4,33 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    height: 65%;
     width: 100%;
     margin: 0;
     padding: 0;
     z-index: -5;
 }
 
+#alert-container {
+    position: fixed;
+    left: 50%;
+    bottom: 15%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 60%;
+}
+
 /* Bottom Card */
 #bottom-card {
-    height: 35%;
     background-color: #444444;
-    z-index: 999;
 }
 
 .greybg {
     background-color: #444444;
 }
 
-/* #middleBottomContainer {
-    text-align: center;
-    z-index: 1000;
-} */
-
-/* #copyBtn {
-    display: inline-block;
-    z-index: 1000;
-    position: absolute;
-    bottom: 5%;
-    left: 50%;
-    text-align: center;
-} */
-
-/* #topRightButtonsContainer {
-    position: absolute;
-    margin: 1%;
-    bottom: 5%;
-    right: 0;
-    z-index: 1000;
-} */
-
-/* Function Buttons */
-/* .topRightButton {
-    padding-right: 1.2em;
-    padding-left: 1.2em;
-    margin: 0.1em;
-} */
+#buttonsContainer {
+    margin-top: 0.5em;
+}
 #googleMapsBtn {
     width: 3.5em;
     height: 2.5em;
@@ -78,6 +59,15 @@
     }
 }
 
+#territoryContainer {
+    margin: 0.5em;
+    position: fixed;
+    bottom: 5em;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
 #mapcodeSearch {
     padding: 1%;
     border-radius: 10px;
@@ -85,6 +75,7 @@
 
 #mapcodeContainer {
     padding: 1%;
+    margin-top: 0.5em;
     border-radius: 10px;
 }
 

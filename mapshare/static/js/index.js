@@ -122,16 +122,16 @@ async function initMap() {
         zoom: 15,
         center: defaultCoordsLatLngObj,
         mapId: "map",
-        zoomControl: true,
+        zoomControl: false,
         zoomControlOptions: {
-            position: google.maps.ControlPosition.RIGHT_BOTTOM
+            position: google.maps.ControlPosition.RIGHT_CENTER
         },
         streetViewControl: false,
         cameraControl: false,
         rotateControl: false,
         mapTypeControl: true,
         mapTypeControlOptions: {
-            position: google.maps.ControlPosition.LEFT_BOTTOM,
+            position: google.maps.ControlPosition.BLOCK_START_INLINE_END,
             style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
         },
         fullscreenControl: false,
