@@ -37,7 +37,7 @@ def index(request, mapcode = False, context = False):
 
     # Fresh Request
     if not mapcode and not context:
-        if lookupData:
+        if lookupData.responses:
             print("Fresh request, generating mapcode from general location/lookup")
             coords = {"lat": lookupData["latitude"], "lng": lookupData["longitude"]}
             response = mc.encode(coords["lat"], coords["lng"])
@@ -71,7 +71,10 @@ def index(request, mapcode = False, context = False):
             territory = "International"
         else:
             # Use context from request location
-            contextCheck = getCountryCode3(lookupData["country_code"])
+            if lookupData.responses:
+                contextCheck = getCountryCode3(lookupData["country_code"])
+            else:
+                contextCheck = ""
             if mc.isvalid(f"{contextCheck} {mapcode}"):
                 print(f"Not international, use context from locationData")
                 coords = mc.decode(mapcode, contextCheck)
@@ -139,8 +142,8 @@ def index(request, mapcode = False, context = False):
         "lookupContext": getCountryCode3(lookupData.country_code),
         "lookupRegion": lookupData.region,
         "lookupCity": lookupData.city,
-        "lookupLat": lookupData.latitude,
-        "lookupLng": lookupData.longitude,
+        "lookupLat": lookupData.latitude or coords["lat"],
+        "lookupLng": lookupData.longitude or coords["lng"],
         "countries2": getCountries2(),
         "countryFlag": countryFlag,
     }

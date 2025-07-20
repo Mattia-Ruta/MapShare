@@ -17,7 +17,7 @@ function setMapcodeData(context, mapcode, territory, altMapcodes = [], countryFl
     contextElem.innerHTML = spinningGif;
     context = context.toUpperCase();
     mapcode = mapcode.toUpperCase();
-    if (context == "AAA") {
+    if (context === "AAA") {
         contextElem.innerHTML = "AAA";
         territoryElem.innerHTML = "International";
         countryFlagElem.innerHTML = "🌐";
@@ -30,7 +30,7 @@ function setMapcodeData(context, mapcode, territory, altMapcodes = [], countryFl
     setURL(`/${context}/${mapcode}`);
     for (const altMapcode of altMapcodes) {
         if (typeof altMapcode.countryFlag == "undefined") altMapcode.countryFlag = "";
-        if (altMapcode.mapcode == mapcode) {
+        if (altMapcode.mapcode === mapcode) {
             altMapcodesDropdown.innerHTML += `<li><a class="dropdown-item active" href="/${context}/${mapcode}" aria-current="true">${altMapcode.countryFlag}[${context} ${mapcode}] <small><i>${territory}</i></small></a></li>`;
         } else {
             altMapcodesDropdown.innerHTML += `<li><a class="dropdown-item" href="/${altMapcode.context}/${altMapcode.mapcode}">${altMapcode.countryFlag} [${altMapcode.context} ${altMapcode.mapcode}] <small><i>${altMapcode.territory}</i></small></a></li>`;
@@ -118,7 +118,6 @@ async function initMap() {
     const defaultCoordsLatLngObj = new google.maps.LatLng(coords.lat, coords.lng);
     
     map = new Map(document.getElementById("map"), {
-        center: defaultCoords,
         zoom: 15,
         center: defaultCoordsLatLngObj,
         mapId: "map",

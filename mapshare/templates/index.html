@@ -36,8 +36,8 @@
             <div>
                 <button id="locationBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-location-arrow"></i></button>
                 <button id="shareBtn" type="button" class="btn btn-info btn-md"><i class="fa-solid fa-share-nodes"></i></button>
-                <button id="googleMapsBtn" type="button" class="btn btn-info btn-sm"><img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}"></button>
-                <button id="citymapperBtn" type="button" class="btn btn-info btn-sm"><img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}"></button>
+                <button id="googleMapsBtn" type="button" class="btn btn-info btn-sm"><img id="googleMapsLogo" src="{% static 'img/google-maps.png' %}" alt="Google Maps logo"></button>
+                <button id="citymapperBtn" type="button" class="btn btn-info btn-sm"><img id="citymapperLogo" src="{% static 'img/citymapper.svg' %}" alt="Citymapper logo"></button>
             </div>
         </div>
     </div>
@@ -130,6 +130,7 @@
     let mapcode = "{{ mapcode }}";
     let altMapcodes = {{ altMapcodes|safe }};
     let context = "{{ context }}";
+    console.log(context)
     let territory = "{{ territory }}";
     let coords = {lat: "{{ urlLat }}", lng: "{{ urlLng }}"};
     const initialZoom = {{ initialZoom }};
