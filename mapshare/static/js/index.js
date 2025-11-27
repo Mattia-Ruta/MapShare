@@ -165,7 +165,9 @@ setURL(`/${context}/${mapcode}`);
 initMap()
 .then((map) => {
     console.log("Map Loaded");
-
+    const {region} = new Intl.Locale(navigator.language);
+    const countryNames = new Intl.DisplayNames([navigator.language], { type: 'region' });
+    const country = countryNames.of(region);
     // region Top-Right Buttons
     // Location Button
     const locationBtn = document.getElementById("locationBtn");

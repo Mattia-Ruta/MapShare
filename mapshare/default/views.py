@@ -22,23 +22,28 @@ def index(request, mapcode = False, context = False):
         context = False
     territory = context
     coords = False
-    countryFlag = False
-    
+    countryFlag = "🌐"
+
     bigBenCoords = {"lat": 51.5006785719964, "lng": -0.12454569}
     bigBenContext = "GBR"
     bigBenMapcode = "JJ.66"
     bigBenCountryFlag = "🇬🇧"
     bigBenTerritory = "England, United Kingdom"
-    
+    coords = bigBenCoords
+
     client_ip, is_routable = get_client_ip(request)
     if client_ip == "127.0.0.1": client_ip = "31.94.18.51"
-    ipdata.api_key = settings.IPDATA_API_KEY
-    lookupData = ipdata.lookup(client_ip)
+    lookupData = False
+    if settings.USEIPDATA == True and settings.IPDATA_API_KEY:
+        ipdata.api_key = settings.IPDATA_API_KEY
+        lookupData = ipdata.lookup(client_ip)
+        if settings.DEBUG: print("Initial Lookup Data: ", lookupData)
 
     # Fresh Request
     if not mapcode and not context:
-        if lookupData.responses:
-            print("Fresh request, generating mapcode from general location/lookup")
+        if lookupData and lookupData.responses:
+            if settings.DEBUG:
+                print("Fresh request, generating mapcode from general location/lookup")
             coords = {"lat": lookupData["latitude"], "lng": lookupData["longitude"]}
             response = mc.encode(coords["lat"], coords["lng"])
             mapcode = response[0][0]
@@ -51,7 +56,8 @@ def index(request, mapcode = False, context = False):
             context = getCountryCode3(lookupData["country_code"])
             msg = "Mapcode generated from your general area"
         else:
-            print("Could not determine general location--no location data")
+            if settings.DEBUG:
+                print("Could not determine general location--no location data")
             coords = bigBenCoords
             context = bigBenContext
             mapcode = bigBenMapcode
@@ -59,9 +65,11 @@ def index(request, mapcode = False, context = False):
             territory = bigBenTerritory
             error = "Could not determine general location, here's Big Ben"
     elif mapcode and not context:
-        print("Just mapcode given, checking if international context...")
+        if settings.DEBUG:
+            print("Just mapcode given, checking if international context...")
         if not math.isnan(mc.decode(mapcode, "AAA")[0]):
-            print(f"International Context for mapcode {mapcode}")
+            if settings.DEBUG:
+                print(f"International Context for mapcode {mapcode}")
             context = "AAA"
             coords = mc.decode(mapcode, context)
             coords = {"lat": coords[0], "lng": coords[1]}
@@ -71,23 +79,28 @@ def index(request, mapcode = False, context = False):
             territory = "International"
         else:
             # Use context from request location
-            if lookupData.responses:
+            if lookupData and lookupData.responses:
                 contextCheck = getCountryCode3(lookupData["country_code"])
             else:
                 contextCheck = ""
-            if mc.isvalid(f"{contextCheck} {mapcode}"):
-                print(f"Not international, use context from locationData")
+            if len(contextCheck) and mc.isvalid(f"{contextCheck} {mapcode}"):
+                if settings.DEBUG:
+                    print(f"Using context {contextCheck} for mapcode {mapcode}")
                 coords = mc.decode(mapcode, contextCheck)
                 coords = {"lat": coords[0], "lng": coords[1]}
                 context = contextCheck
-                countryFlag = lookupData["emoji_flag"]
+                if lookupData:
+                    countryFlag = lookupData["emoji_flag"]
+                if settings.DEBUG:
+                    print(f"Coords are: {coords}")
                 response = rg.get((coords["lat"], coords["lng"]))
                 if response["admin1"]:
                     countryInfo = pycountry.countries.get(alpha_2=response["cc"], default=context)
                     territory = f"{response['admin1']}, {countryInfo.name}"
                 msg = f"Used context {context} for mapcode {mapcode}"
             else:
-                print("Invalid mapcode")
+                if settings.DEBUG:
+                    print(f"Mapcode {mapcode} is not valid without context")
                 error = f"{mapcode} is not a valid mapcode, try again by providing a context (ex: https://mapshare.xyz/GBR/JJ.66)"
                 coords = bigBenCoords
                 context = bigBenContext
@@ -95,7 +108,8 @@ def index(request, mapcode = False, context = False):
                 countryFlag = bigBenCountryFlag
                 territory = bigBenTerritory
     elif mapcode and context and isValidMapcode:
-        print(f"Mapcode {context} {mapcode} is valid")
+        if settings.DEBUG:
+            print(f"Mapcode {context} {mapcode} is valid")
         coords = mc.decode(mapcode, context)
         coords = {"lat": coords[0], "lng": coords[1]}
         response = rg.get((coords["lat"], coords["lng"]))
@@ -106,7 +120,9 @@ def index(request, mapcode = False, context = False):
 
     altMapcodes = []
     altMapcodeTerritory = ""
-    mcResponse = mc.encode(coords["lat"], coords["lng"])
+    mcResponse = False
+    if coords:
+        mcResponse = mc.encode(coords["lat"], coords["lng"])
     if mcResponse:
         for altMapcode in mcResponse:
             if altMapcode[1] == "AAA":
@@ -137,16 +153,20 @@ def index(request, mapcode = False, context = False):
         "googleMapsPlacesUrl": settings.GOOGLEMAPS_PLACES_URL,
         "territory": territory,
         "googlemapsAPIKey": settings.GOOGLEMAPS_API_KEY,
-        "lookupCountry": lookupData.country_name,
-        "lookupCountryCode": lookupData.country_code,
-        "lookupContext": getCountryCode3(lookupData.country_code),
-        "lookupRegion": lookupData.region,
-        "lookupCity": lookupData.city,
-        "lookupLat": lookupData.latitude or coords["lat"],
-        "lookupLng": lookupData.longitude or coords["lng"],
+        "lookupLat": coords["lat"],
+        "lookupLng": coords["lng"],
         "countries2": getCountries2(),
         "countryFlag": countryFlag,
     }
+
+    if lookupData:
+        vars["lookupCountry"] = lookupData.country_name
+        vars["lookupCountryCode"] = lookupData.country_code
+        vars["lookupContext"] = getCountryCode3(lookupData.country_code)
+        vars["lookupRegion"] = lookupData.region
+        vars["lookupCity"] = lookupData.city
+        vars["lookupLat"] = lookupData.latitude
+        vars["lookupLng"] = lookupData.longitude
     return render(request, "index.html", vars)
 
 

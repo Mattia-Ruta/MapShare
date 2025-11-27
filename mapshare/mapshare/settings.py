@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "mapshare.xyz",
     "www.mapshare.xyz",
+    "mapshare.local",
 ]
 
 
@@ -63,6 +64,7 @@ TEMPLATES = [
 ]
 
 # Variables
+USEIPDATA = os.getenv("USEIPDATA")
 IPDATA_API_KEY = os.getenv("IPDATA_API_KEY")
 MAPTILER_API_KEY = os.getenv("MAPTILER_API_KEY")
 GOOGLEMAPS_API_KEY = os.getenv("GOOGLEMAPS_API_KEY")
